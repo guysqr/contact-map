@@ -1,16 +1,22 @@
 {
-    "auth": {
-        "vuecontactmapf4cfd6fb": {
-            "service": "Cognito",
-            "providerPlugin": "awscloudformation",
-            "dependsOn": [],
-            "customAuth": false
-        }
-    },
-    "hosting": {
-        "amplifyhosting": {
-            "service": "amplifyhosting",
-            "type": "cicd"
-        }
-    }
+	"auth": {
+		"vuecontactmapf4cfd6fb": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [],
+			"customAuth": false
+		}
+	},
+	"hosting": {
+		"amplifyhosting": {
+			"service": "amplifyhosting",
+			"type": "cicd"
+		}
+	},
+	"storage": {
+		"assets": {
+			"service": "S3",
+			"providerPlugin": "awscloudformation"
+		}
+	}
 }

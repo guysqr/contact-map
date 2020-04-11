@@ -22,5 +22,29 @@
                 }
             }
         }
+    },
+    "devel": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-vue-contact-map-devel-95102-authRole",
+            "UnauthRoleArn": "arn:aws:iam::763345617855:role/amplify-vue-contact-map-devel-95102-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::763345617855:role/amplify-vue-contact-map-devel-95102-authRole",
+            "Region": "ap-southeast-2",
+            "DeploymentBucketName": "amplify-vue-contact-map-devel-95102-deployment",
+            "UnauthRoleName": "amplify-vue-contact-map-devel-95102-unauthRole",
+            "StackName": "amplify-vue-contact-map-devel-95102",
+            "StackId": "arn:aws:cloudformation:ap-southeast-2:763345617855:stack/amplify-vue-contact-map-devel-95102/23e7f660-7b86-11ea-8695-0aae9cee3eb0",
+            "AmplifyAppId": "d2isoocenekqjh"
+        },
+        "categories": {
+            "auth": {
+                "vuecontactmapf4cfd6fb": {}
+            },
+            "hosting": {
+                "amplifyhosting": {
+                    "appId": "d2isoocenekqjh",
+                    "type": "cicd"
+                }
+            }
+        }
     }
 }
