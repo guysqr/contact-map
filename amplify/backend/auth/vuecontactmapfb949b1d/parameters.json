@@ -1,8 +1,8 @@
 {
-    "identityPoolName": "vuecontactmapf4cfd6fb_identitypool_f4cfd6fb",
+    "identityPoolName": "vuecontactmapfb949b1d_identitypool_fb949b1d",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "vueconf4cfd6fb",
-    "userPoolName": "vuecontactmapf4cfd6fb_userpool_f4cfd6fb",
+    "resourceNameTruncated": "vueconfb949b1d",
+    "userPoolName": "vuecontactmapfb949b1d_userpool_fb949b1d",
     "autoVerifiedAttributes": [
         "email"
     ],
@@ -28,9 +28,9 @@
     "userpoolClientReadAttributes": [
         "email"
     ],
-    "userpoolClientLambdaRole": "vueconf4cfd6fb_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "vueconfb949b1d_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "resourceName": "vuecontactmapf4cfd6fb",
+    "resourceName": "vuecontactmapfb949b1d",
     "authSelections": "identityPoolAndUserPool",
     "authRoleArn": {
         "Fn::GetAtt": [

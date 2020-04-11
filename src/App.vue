@@ -1,10 +1,13 @@
 <template>
-  <HelloWorld id="app"/>
-
+  <HelloWorld id="app" />
 </template>
+
 <script>
 import HelloWorld from './components/HelloWorld.vue'
-// import { Auth } from 'aws-amplify'
+// import { Auth } from 'aws-amplify-vue'
+// import L from 'leaflet';
+// import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
+
 export default {
   name: 'app',
   components: {

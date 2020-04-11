@@ -1,6 +1,6 @@
 {
 	"auth": {
-		"vuecontactmapf4cfd6fb": {
+		"vuecontactmapfb949b1d": {
 			"service": "Cognito",
 			"providerPlugin": "awscloudformation",
 			"dependsOn": [],

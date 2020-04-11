@@ -12,14 +12,14 @@
             "AmplifyAppId": "d1rbwhz6nxj7de"
         },
         "categories": {
-            "auth": {
-                "vuecontactmapf4cfd6fb": {}
-            },
             "hosting": {
                 "amplifyhosting": {
                     "appId": "d1rbwhz6nxj7de",
                     "type": "cicd"
                 }
+            },
+            "auth": {
+                "vuecontactmapfb949b1d": {}
             }
         }
     },
@@ -42,6 +42,30 @@
             "hosting": {
                 "amplifyhosting": {
                     "appId": "d2isoocenekqjh",
+                    "type": "cicd"
+                }
+            }
+        }
+    },
+    "proto": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-vue-contact-map-proto-122735-authRole",
+            "UnauthRoleArn": "arn:aws:iam::763345617855:role/amplify-vue-contact-map-proto-122735-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::763345617855:role/amplify-vue-contact-map-proto-122735-authRole",
+            "Region": "ap-southeast-2",
+            "DeploymentBucketName": "amplify-vue-contact-map-proto-122735-deployment",
+            "UnauthRoleName": "amplify-vue-contact-map-proto-122735-unauthRole",
+            "StackName": "amplify-vue-contact-map-proto-122735",
+            "StackId": "arn:aws:cloudformation:ap-southeast-2:763345617855:stack/amplify-vue-contact-map-proto-122735/02135f00-7b9c-11ea-9ce8-0a564743ac36",
+            "AmplifyAppId": "d932atxapzkq"
+        },
+        "categories": {
+            "auth": {
+                "vuecontactmapfb949b1d": {}
+            },
+            "hosting": {
+                "amplifyhosting": {
+                    "appId": "d932atxapzkq",
                     "type": "cicd"
                 }
             }
