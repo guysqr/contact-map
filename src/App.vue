@@ -1,9 +1,15 @@
 <template>
-  <HelloWorld id="app" />
+  <HelloWorld id="app" msg="hey there">
+      <amplify-authenticator v-bind:authConfig="authConfig">
+  <amplify-sign-in v-bind:signInConfig="signInConfig"></amplify-sign-in>
+  </amplify-authenticator>
+    
+  </HelloWorld>
+
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import HelloWorld from './components/Auth.vue'
 // import { Auth } from 'aws-amplify-vue'
 // import L from 'leaflet';
 // import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
