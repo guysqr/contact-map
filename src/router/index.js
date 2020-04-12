@@ -9,7 +9,7 @@ Vue.use(Router);
 
 export default new Router({
   routes: [
-    { path: '/', name: 'home', component: Home, meta: { title: "Home" } },
+    { path: '/', name: 'home', component: Home, meta: { title: "Homer" } },
     { path: '/login', name: 'login', component: Login, meta: { title: "Login" } },
     { path: '/map', name: 'register', component: Mapbox, meta: { title: "Map" } },
     { path: '/settings', name: 'settings', component: Settings, meta: { title: "Settings" } },
