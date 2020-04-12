@@ -1,25 +1,27 @@
 <template>
-  <HelloWorld id="app" msg="hey there">
-      <amplify-authenticator v-bind:authConfig="authConfig">
-  <amplify-sign-in v-bind:signInConfig="signInConfig"></amplify-sign-in>
-  </amplify-authenticator>
-    
-  </HelloWorld>
-
+  <div id="app">
+    <app-header />
+    <navigation />
+    <app-footer />
+  </div>
 </template>
 
+
 <script>
-import HelloWorld from './components/Auth.vue'
-// import { Auth } from 'aws-amplify-vue'
-// import L from 'leaflet';
-// import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
+// import HelloWorld from './components/HelloWorld.vue'
+import { components } from 'aws-amplify-vue'
+import AppHeader from '@/components/Header';
+import Navigation from '@/components/Navigation';
+import AppFooter from '@/components/Footer';
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    AppHeader, Navigation, AppFooter,
+    ...components
   }
 }
+
 </script>
 
 <style>
@@ -31,4 +33,13 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
+#auth {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+
 </style>
