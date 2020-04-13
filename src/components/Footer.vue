@@ -1,9 +1,8 @@
 <template>
   <footer id="AppFooter">
       <div class="container">
-        <router-link :to="{ name: 'home' }" class="logo-font">Home</router-link>
         <span class="attribution">
-          &copy; Guy Morton.
+          Contact Map &copy; Guy Morton. 
         </span>
       </div>
     </footer>
@@ -14,4 +13,8 @@
   };
 </script>
 <style scoped>
+.attribution {
+    padding: 10px;
+    font-size: smaller;
+}
 </style>

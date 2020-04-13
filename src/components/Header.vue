@@ -22,8 +22,7 @@
 </script>
 
 <style scoped>
-h1 {
-    padding: 0px 10px 0px 10px;
+.container {
+    padding: 3px 10px 0px 10px;
 }
-
 </style>

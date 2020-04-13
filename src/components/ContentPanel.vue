@@ -1,7 +1,7 @@
 <template>
   <div id="content-panel">
     <div id="sidebar" v-if="sidebar" v-bind:style="mainHeight">
-      <div class="sidebar-info" v-bind:style="mainHeight">{{ sidebar }}</div>
+      <div class="sidebar-info" style="height: calc(100vh - 100px)">{{ sidebar }}</div>
     </div>
     <div v-bind:style="mainWidth"><router-view class="view" id="mainContent"></router-view></div>
   </div>
@@ -21,11 +21,16 @@ export default {
       return { width: "100%" };
     },
     mainHeight() {
-      return { height: document.getElementById("mainContent").offsetHeight + 'px' };
+      return { height: "calc(100% - 50px)" };
     }
 
   }
 };
+
+// function newFunction() {
+//   return (window.innerHeight - document.getElementById("Navigation").offsetHeight - document.getElementById("AppHeader").offsetHeight - document.getElementById("AppFooter").offsetHeight) + 'px'
+// }
+
 </script>
 
 <style scoped>
@@ -41,5 +46,9 @@ export default {
 .sidebar-info {
   border: 1px solid grey;
   border-radius: 10px;
+  background-color: #ddd;
+  color: #333;
+  padding: 10px;
 }
+
 </style>

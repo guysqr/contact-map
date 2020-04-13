@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <amplify-authenticator v-bind:authConfig="authConfig"></amplify-authenticator>
   </div>
 </template>
@@ -52,3 +52,9 @@ export default {
     }
   }
 </script>
+
+<style scoped>
+.container {
+    padding: 10px;
+}
+</style>

@@ -1,10 +1,11 @@
 <template>
   <div>
+    <amplify-sign-out></amplify-sign-out>
   </div>
 </template>
 <script>
 export default {
-  name: 'Settings',
+  name: 'Logout',
   props: [],
   }
 </script>
