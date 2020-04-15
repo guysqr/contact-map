@@ -24,6 +24,7 @@
         :url="url"
         :attribution="attribution"
       />
+      <LeafletHeatmap :lat-lng="latLngArray" :max="maxValue" :radius="15"></LeafletHeatmap>
       <l-marker :lat-lng="withPopup">
         <l-popup>
           <div @click="innerClick">
@@ -48,13 +49,17 @@
           </div>
         </l-tooltip>
       </l-marker>
+      
     </l-map>
   </div>
 </template>
 
 <script>
+import "core-js/modules/es6.number.constructor";
 import { latLng } from "leaflet";
 import { LMap, LTileLayer, LMarker, LPopup, LTooltip } from "vue2-leaflet";
+
+import LeafletHeatmap from './Vue2LeafletHeatmap';
 import { vueWindowSizeMixin } from 'vue-window-size';
  
 export default {
@@ -65,11 +70,14 @@ export default {
     LTileLayer,
     LMarker,
     LPopup,
+    LeafletHeatmap,
     LTooltip
   },
   data() {
     return {
       zoom: 13,
+      latLngArray: [[47.41322, -1.219482,100],[47.41322, -1.219482,100],[47.41322, -1.219482,10],[47.41322, -1.219482,100]],
+      maxValue: 10,
       center: latLng(47.41322, -1.219482),
       url: 'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ',
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -88,7 +96,7 @@ export default {
   computed: {
     mapStyles: function () {
       return {
-        height: (window.innerHeight - document.getElementById("Navigation").offsetHeight - document.getElementById("AppHeader").offsetHeight - document.getElementById("AppFooter").offsetHeight) + 'px'
+        height: '1200px'//(window.innerHeight - document.getElementById("Navigation").offsetHeight - document.getElementById("AppHeader").offsetHeight - document.getElementById("AppFooter").offsetHeight) + 'px'
       }
     },
   },
