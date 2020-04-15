@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import "core-js/modules/es6.number.constructor";
+// import "core-js/modules/es6.number.constructor";
 import { latLng } from "leaflet";
 import { LMap, LTileLayer, LMarker, LPopup, LTooltip } from "vue2-leaflet";
 
