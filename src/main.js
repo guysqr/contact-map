@@ -1,5 +1,5 @@
-import Vue from 'vue'
-import App from './App.vue'
+import Vue from 'vue';
+import App from './App.vue';
 import Amplify, * as AmplifyModules from 'aws-amplify';
 import { AmplifyPlugin } from 'aws-amplify-vue';
 import { AmplifyEventBus } from 'aws-amplify-vue';
@@ -16,7 +16,7 @@ Vue.component('l-marker', LMarker);
 Amplify.configure(aws_exports);
 Vue.use(AmplifyPlugin, AmplifyModules, VueWindowSize);
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 new Vue({
   router,

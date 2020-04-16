@@ -35,7 +35,7 @@ const props = {
   blur: {
     type: Number,
     custom: true,
-    default: 15
+    default: 20
   },
   max: {
     type: Number,
@@ -75,6 +75,7 @@ export default {
     }
     this.mapObject = L.heatLayer(this.latLng, options);
     DomEvent.on(this.mapObject, this.$listeners);
+    console.log(this);
     propsBinder(this, this.mapObject, props);
     this.ready = true;
     this.parentContainer = findRealParent(this.$parent);
@@ -109,6 +110,7 @@ export default {
     },
     addLatLng(value) {
       this.mapObject.addLatLng(value);
+      console.log("added data via addLatLng");
     }
   }
 };
