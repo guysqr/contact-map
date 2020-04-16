@@ -41,7 +41,7 @@
       <l-marker :lat-lng="withTooltip">
         <l-tooltip :options="{ permanent: true, interactive: true }">
           <div @click="innerClick">
-            Peak Covid
+            Peak Covid-19 Cases
             <p v-show="showParagraph">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
               sed pretium nisl, ut sagittis sapien. Sed vel sollicitudin nisi.
@@ -140,7 +140,7 @@ export default {
       this.showParagraph = !this.showParagraph;
     },
     innerClick() {
-      alert("Click!");
+      alert("Thanks for clicking!");
     },
     setMapHeight() {
       var heightString = (window.innerHeight - document.getElementById("Navigation").offsetHeight - document.getElementById("AppHeader").offsetHeight - document.getElementById("AppFooter").offsetHeight) + 'px';
