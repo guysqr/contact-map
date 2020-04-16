@@ -149,7 +149,7 @@ export default {
     },
     getHeatmapData() {
       var me = this;
-      fetch('https://api.contactmap.me/locations/cases/foo')
+      fetch('https://api.contactmap.me/locations/all/all')
         .then(
           function(response) {
             if (response.status !== 200) {
