@@ -20,6 +20,7 @@
       v-bind:style="mapStyles"
       @update:center="centerUpdate"
       @update:zoom="zoomUpdate"
+      ref="map"
     >
       <l-tile-layer
         :url="url"
@@ -41,28 +42,29 @@
       <!-- <l-marker :lat-lng="withTooltip">
         
       </l-marker>  -->
-      <v-marker-cluster v-if="showClusters">
-        <l-marker v-for="c in cases" :name="c.value" :lat-lng="c.latlng" v-bind:key="c.id" :options="markerOptions">
-          <l-icon :icon="icon" :options="iconOptions"></l-icon>
+      <!-- <v-marker-cluster v-if="showClusters" :options="clusterOptions" ref="myCluster" > -->
+        <l-marker v-for="c in cases" :lat-lng="c.latlng" :value="c.value" v-bind:key="c.id" :options="markerOptions" :ref="c.id" >
+          <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize,c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
           <!-- <l-popup :content="c.value" :lat-lng="c.latlng" :options="{ permanent: true, interactive: true }"></l-popup> -->
-          <l-tooltip :options="{ permanent: true, interactive: true }">
-          <div @click="innerClick">
+          <l-tooltip :options="{ permanent: false, interactive: true }">
+          <!-- <div @click="innerClick"> -->
             {{c.value}} Covid-19 Cases
             <!-- <p v-show="showParagraph">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
               sed pretium nisl, ut sagittis sapien. Sed vel sollicitudin nisi.
               Donec finibus semper metus id malesuada.
             </p> -->
-          </div>
+          <!-- </div> -->
         </l-tooltip>
         </l-marker>
-      </v-marker-cluster>
+      <!-- </v-marker-cluster> -->
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <l-control position="bottomleft" >
         <button @click="clickHandler" >
           Toggle Display
         </button>
       </l-control>
+      <l-draw-toolbar position="topright"/>
     </l-map>
   </div>
 </template>
@@ -74,13 +76,16 @@ import { latLng } from "leaflet";
 import { LMap, LTileLayer, LMarker, LTooltip, LControl, LControlScale, LIcon } from "vue2-leaflet";
 
 import LeafletHeatmap from './Vue2LeafletHeatmap';
-import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
+// import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
+import Vue2LeafletDrawToolbar from 'vue2-leaflet-draw-toolbar';
 import Vue from 'vue';
 
-L.Icon.Default.mergeOptions({  
-  iconRetinaUrl: require('./../assets/cv2.jpg'),  
-  iconUrl: require('./../assets/cv2.jpg')
-})
+// L.Icon.Default.mergeOptions({  
+//   iconRetinaUrl: require('./../assets/cv2.jpg'),  
+//   iconUrl: require('./../assets/cv2.jpg')
+// })
+
+
 export default {
   name: "MapPanel",
   components: {
@@ -93,7 +98,8 @@ export default {
     LControl,
     LControlScale,
     LIcon,
-    'v-marker-cluster': Vue2LeafletMarkerCluster
+    'l-draw-toolbar': Vue2LeafletDrawToolbar,
+    // 'v-marker-cluster': Vue2LeafletMarkerCluster
   },
   data() {
     return {
@@ -103,18 +109,22 @@ export default {
       latLngArray: [],
       maxValue: .1,
       caseArray: [],
-      // icon: L.icon({
-      //   iconUrl: 'http://leafletjs.com/examples/custom-icons/leaf-green.png',
-      //   iconSize: [32, 37],
-      //   iconAnchor: [16, 37]
-      // }),
+      icon: L.icon({
+        iconUrl: 'https://www.contactmap.me/img/coronavirus.svg',
+        // iconSize: [32, 37],
+        // iconAnchor: [16, 37]
+      }),
       iconOptions: {
-        iconUrl: "https://www.contactmap.me/img/coronavirus.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        tooltipAnchor:[0,0]
+        iconUrl: "https://www.contactmap.me/img/coronavirus.svg",
+        // iconSize: [32, 32],
+        // iconAnchor: [16, 16],
+        // tooltipAnchor:[0,0]
       },
       markerOptions: { },
+      clusterOptions: {
+        className: "cluster-css",
+        // iconCreateFunction: this.iconCreateFunction
+      },
       center: latLng(-33.8038169, 151.1997539),
       url: 'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ',
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -150,6 +160,22 @@ export default {
         this.showHeatmap = false;
         this.showClusters = true;
       }
+    },
+    iconCreateFunction(cluster) {
+      // console.log(cluster);
+      var markers = cluster.getAllChildMarkers();
+      // console.log(this.$refs.myCluster);
+      console.log(this.$refs);
+      this.$refs['case-2464'][0].$attrs.value
+      var n = 0;
+      for (var i = 0; i < markers.length; i++) {
+        // console.log(Vue.get(markers[i],'id'));
+        n += parseInt(markers[i].options.icon.options.className);
+      }
+      var icon = L.divIcon({ html: '<b>' + n + '</b>', iconSize: L.point(n, n) });
+      // console.log(icon);
+      // markers.refreshClusters();
+      return icon;
     },
     zoomUpdate(zoom) {
       this.currentZoom = zoom;
@@ -189,8 +215,9 @@ export default {
                   // me.latLngArray.push();
                   // LeafletHeatmap.addLatLng([data[i].lat,data[i].lng,data[i].cases*10]);
                   // L.HeatLayer.addLatLng([data[i].lat,data[i].lng,data[i].cases*100]);
+                  let myIconSize = data[i].cases > 0 ? Math.log(data[i].cases)/Math.log(10) * 15 + 10 : 0;
                   Vue.set(me.latLngArray,i,[data[i].lat,data[i].lng,data[i].cases])
-                  Vue.set(me.caseArray,i,{ latlng: latLng(data[i].lat,data[i].lng), id: data[i].id, value: data[i].cases.toString() } )
+                  Vue.set(me.caseArray,i,{ latlng: latLng(data[i].lat,data[i].lng), id: 'case-'+data[i].id, iconSize: myIconSize, value: data[i].cases.toString() } )
                 }
               }
               // this.LMap.setZoom(3);
@@ -218,7 +245,24 @@ export default {
 
 </script>
 
-<style scoped>
+<style>
 @import "~leaflet.markercluster/dist/MarkerCluster.css";
 @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+#cluster-css {
+    width: 40px;
+    height: 40px;
+    /* background-color: greenyellow; */
+    text-align: center;
+    font-size: 24px;
+    border: 1px solid black;
+    background-color: red;
+    border-radius: 40px;
+}
+
+.leaflet-div-icon {
+  border-radius: 20px;
+  background: #fd0000;
+  border: 1px solid #666;
+  color: white;
+}
 </style>
