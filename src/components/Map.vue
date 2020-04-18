@@ -109,9 +109,10 @@ export default {
       //   iconAnchor: [16, 37]
       // }),
       iconOptions: {
-        iconUrl: "http://leafletjs.com/examples/custom-icons/leaf-green.png",
+        iconUrl: "https://www.contactmap.me/img/coronavirus.png",
         iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconAnchor: [16, 16],
+        tooltipAnchor:[0,0]
       },
       markerOptions: { },
       center: latLng(-33.8038169, 151.1997539),
