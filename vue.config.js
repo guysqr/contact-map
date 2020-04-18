@@ -7,5 +7,5 @@ module.exports = {
             args[0].title = 'Contact Map';
             return args;
         });
-    },
+    }
 }
