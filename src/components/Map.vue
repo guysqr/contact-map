@@ -22,6 +22,8 @@
       style="width:100%; height: 100vh;"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
+      <l-geo-json :geojson="geojson"></l-geo-json>
+      <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>
       <LeafletHeatmap
         v-if="showHeatmap"
         :lat-lng="latLngArray"
@@ -46,7 +48,9 @@
             :iconSize="[c.iconSize, c.iconSize]"
             :iconAnchor="c.iconAnchor"
           ></l-icon>
-          <l-tooltip :options="{ permanent: false, interactive: true }"> {{ c.value }} Covid-19 Cases </l-tooltip>
+          <l-tooltip :options="{ permanent: false, interactive: true }"
+            >{{ c.value }} Covid-19 Cases<br />{{ c.place }}</l-tooltip
+          >
         </l-marker>
       </div>
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
@@ -63,7 +67,17 @@
 <script>
   import L from "leaflet";
   import { latLng } from "leaflet";
-  import { LMap, LTileLayer, LMarker, LTooltip, LControl, LControlScale, LIcon } from "vue2-leaflet";
+  import {
+    LMap,
+    LTileLayer,
+    LMarker,
+    LTooltip,
+    LControl,
+    LControlScale,
+    LIcon,
+    LPolygon,
+    LGeoJson,
+  } from "vue2-leaflet";
 
   import LeafletHeatmap from "./Vue2LeafletHeatmap";
   import Vue2LeafletDrawToolbar from "vue2-leaflet-draw-toolbar";
@@ -80,18 +94,26 @@
       LControl,
       LControlScale,
       LIcon,
+      LPolygon,
+      LGeoJson,
       "l-draw-toolbar": Vue2LeafletDrawToolbar,
     },
     data() {
       return {
         zoom: 5,
-        showClusters: true,
+        showClusters: false,
         showHeatmap: true,
         heatmapGradient: { 0.3: "rgba(250,1,1,1)", 0.5: "rgba(250,1,1,1)", 1: "rgba(250,1,1,1)" },
         latLngArray: [],
         maxValue: 0.1,
         caseArray: [],
         locationIds: {},
+        lgaPolygons: {},
+        activePolygon: { color: "blue", latLngs: [] },
+        geojson: {
+          type: "Point",
+          coordinates: [30, 10],
+        },
         icon: L.icon({
           iconUrl: "https://www.contactmap.me/img/coronavirus.svg",
         }),
@@ -186,7 +208,32 @@
             response.json().then(function(data) {
               Vue.set(me.locationIds, data);
               me.getHeatmapData();
+              me.getLgaPolygon(142);
             });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
+          });
+      },
+      getLgaPolygon(id) {
+        var me = this;
+        fetch("https://api.contactmap.me/lgas/" + id)
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
+              return;
+            }
+            response.json().then(function(data) {
+              console.log(data.polygon);
+              // let polygonArray = [];
+              // for (var i=0; i< data.polygon.coordinates.length; i++) {
+              //   polygonArray.push(latLng(data.polygon.coordinates[i]))
+              // }
+              // Vue.set(me.geojson, data.polygon);
+              me.geojson = data.polygon;
+            });
+            // me.activePolygon = me.lgaPolygons[id];
+            console.log(me.geojson);
           })
           .catch(function(err) {
             console.log("Fetch Error :-S", err);
@@ -215,6 +262,7 @@
                       id: "case-" + data[i].id,
                       iconSize: myIconSize,
                       value: data[i].cases.toString(),
+                      place: data[i].place + " " + data[i].state,
                     });
                     index++;
                   }
