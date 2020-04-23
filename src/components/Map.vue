@@ -217,7 +217,7 @@
       },
       getLgaPolygon(id) {
         var me = this;
-        fetch("https://api.contactmap.me/lgas/" + id)
+        fetch("https://api.contactmap.me/geometry/aust_lgas/" + id)
           .then(function(response) {
             if (response.status !== 200) {
               console.log("Looks like there was a problem. Status Code: " + response.status);
@@ -255,6 +255,7 @@
                   Object.prototype.hasOwnProperty.call(data[i], "lng")
                 ) {
                   if (data[i].cases > 0) {
+                    console.log(data[i])
                     let myIconSize = data[i].cases > 0 ? (Math.log(data[i].cases) / Math.log(10)) * 25 + 10 : 0;
                     Vue.set(me.latLngArray, index, [data[i].lat, data[i].lng, data[i].cases]);
                     Vue.set(me.caseArray, index, {
