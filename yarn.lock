@@ -9515,6 +9515,11 @@ vue-axios@^2.1.5:
   resolved "https://registry.yarnpkg.com/vue-axios/-/vue-axios-2.1.5.tgz#1af4bf1218ed71309c76afb38d0f683e312c24a7"
   integrity sha512-th5xVbInVoyIoe+qY+9GCflEVezxAvztD4xpFF39SRQYqpoKD2qkmX8yv08jJG9a2SgNOCjirjJGSwg/wTrbmA==
 
+vue-dynamic-select@^1.0.16:
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/vue-dynamic-select/-/vue-dynamic-select-1.0.16.tgz#eea8d7bfdce5387639135bb78194910aeb3e374c"
+  integrity sha512-qbTZMrmIeVvcMkfbvOJMT9fEe3mFTJR6E5O7X3kzXejtyT20BJ7+lBg157m44oQ6qOvogfVA63N8cThK0qzt+g==
+
 vue-eslint-parser@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npm.taobao.org/vue-eslint-parser/download/vue-eslint-parser-7.0.0.tgz?cache=0&sync_timestamp=1573306631729&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fvue-eslint-parser%2Fdownload%2Fvue-eslint-parser-7.0.0.tgz#a4ed2669f87179dedd06afdd8736acbb3a3864d6"
@@ -9547,6 +9552,11 @@ vue-router@^3.1.6:
   version "3.1.6"
   resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-3.1.6.tgz#45f5a3a3843e31702c061dd829393554e4328f89"
   integrity sha512-GYhn2ynaZlysZMkFE5oCHRUTqE8BWs/a9YbKpNLi0i7xD6KG1EzDqpHQmv1F5gXjr8kL5iIVS8EOtRaVUEXTqA==
+
+vue-select@^3.10.1:
+  version "3.10.1"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.10.1.tgz#3731af25c9ab59ff9d6122dbda3dee628f07ddfa"
+  integrity sha512-rmE19MPS8emN8eLWg6YSqAhrVO4nwD9cr9jeA4LjnJY0QPxqQTNHLl38ovCz23yttvBns57gjiOddsf/pxwPjQ==
 
 vue-style-loader@^4.1.0, vue-style-loader@^4.1.2:
   version "4.1.2"

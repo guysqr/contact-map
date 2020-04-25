@@ -32,6 +32,7 @@
         :blur="15"
         :gradient="heatmapGradient"
         :minOpacity="0.6"
+        ref="heatmap"
       ></LeafletHeatmap>
       <div v-if="showClusters">
         <l-marker
@@ -40,13 +41,15 @@
           :value="c.value"
           v-bind:key="c.id"
           :options="markerOptions"
-          :ref="c.id"
+          ref="c.id"
+          @click="getPolygon(c.geometry_table,c.geometry_table_id)"
         >
           <l-icon
             :icon="icon"
             :options="iconOptions"
             :iconSize="[c.iconSize, c.iconSize]"
             :iconAnchor="c.iconAnchor"
+            
           ></l-icon>
           <l-tooltip :options="{ permanent: false, interactive: true }"
             >{{ c.value }} Covid-19 Cases<br />{{ c.place }}</l-tooltip
@@ -54,10 +57,40 @@
         </l-marker>
       </div>
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
-      <l-control position="bottomleft">
+      <l-control position="topleft">
         <button @click="clickHandler">
           Toggle Display
         </button>
+      </l-control>
+      <l-control position="topleft">
+        <dynamic-select
+          :options="filteredLocationsArray"
+          @input="setMapLocation"
+          option-value="latlng"
+          option-text="label"
+          placeholder="type to search"
+        >
+        </dynamic-select>
+      </l-control>
+      <l-control position="topleft">
+        <dynamic-select
+          :options="datesArray"
+          v-model="selectedDate"
+          @input="setDate"
+          option-value="value"
+          option-text="label"
+        >
+        </dynamic-select>
+      </l-control>
+      <l-control position="topleft">
+        <dynamic-select
+          :options="statesArray"
+          v-model="selectedState"
+          @input="setState"
+          option-value="value"
+          option-text="label"
+        >
+        </dynamic-select>
       </l-control>
       <l-draw-toolbar position="topright" />
     </l-map>
@@ -66,7 +99,7 @@
 
 <script>
   import L from "leaflet";
-  import { latLng } from "leaflet";
+  import { latLng, latLngBounds } from "leaflet";
   import {
     LMap,
     LTileLayer,
@@ -78,6 +111,8 @@
     LPolygon,
     LGeoJson,
   } from "vue2-leaflet";
+
+  import DynamicSelect from "vue-dynamic-select";
 
   import LeafletHeatmap from "./Vue2LeafletHeatmap";
   import Vue2LeafletDrawToolbar from "vue2-leaflet-draw-toolbar";
@@ -97,8 +132,12 @@
       LPolygon,
       LGeoJson,
       "l-draw-toolbar": Vue2LeafletDrawToolbar,
+      DynamicSelect,
     },
     data() {
+      var corner1 = latLng(-55.11579, 72.5781078),
+        corner2 = latLng(-9.1406926, 167.9965857 ),
+        bounds = latLngBounds(corner1, corner2);
       return {
         zoom: 5,
         showClusters: false,
@@ -107,7 +146,13 @@
         latLngArray: [],
         maxValue: 0.1,
         caseArray: [],
-        locationIds: {},
+        locations: {},
+        locationsArray: [],
+        filteredLocationsArray: [],
+        selectedState: { label: "Australia", value: "all" },
+        datesArray: [],
+        statesArray: [],
+        selectedDate: { label: "Latest", value: "latest" },
         lgaPolygons: {},
         activePolygon: { color: "blue", latLngs: [] },
         geojson: {
@@ -136,7 +181,12 @@
         showParagraph: false,
         accessToken: "pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ",
         mapOptions: {
-          zoomSnap: 0.5,
+          zoomSnap: 0.25,
+          scrollWheelZoom: true,
+          wheelPxPerZoomLevel: 120,
+          maxBounds: bounds,
+          maxZoom: 16,
+          minZoom: 5,
         },
         showMap: true,
       };
@@ -154,6 +204,16 @@
         } else {
           this.showHeatmap = false;
           this.showClusters = true;
+        }
+      },
+      showDataPolygon(obj) {
+        console.log(obj);
+      },
+      setMapLocation(obj) {
+        //console.log(obj);
+        if (obj && Object.prototype.hasOwnProperty.call(obj, "value")) {
+          this.$refs.map.mapObject.flyTo(obj.value, 12);
+          this.getPolygon(obj.geotable, obj.geoid);
         }
       },
       // iconCreateFunction(cluster) {
@@ -195,7 +255,7 @@
           document.getElementById("AppFooter").offsetHeight +
           "px";
         document.getElementById("map").style.height = heightString;
-        console.log("map height set to " + heightString);
+        //console.log("map height set to " + heightString);
       },
       getLocations() {
         var me = this;
@@ -206,70 +266,154 @@
               return;
             }
             response.json().then(function(data) {
-              Vue.set(me.locationIds, data);
-              me.getHeatmapData();
-              me.getLgaPolygon(142);
+              Vue.set(me.locations, data);
+              let locArray = [];
+              for (var key in data) {
+                //console.log(key);
+                let label = data[key].place_data;
+                label += data[key].postal_code ? " - " + data[key].postal_code : "";
+                locArray.push({
+                  label: label,
+                  code: key,
+                  value: latLng(data[key].lat, data[key].lng),
+                  state: data[key].state,
+                  geotable: data[key].geometry_table,
+                  geoid: data[key].geometry_table_id,
+                });
+              }
+              me.locationsArray = me.filteredLocationsArray = locArray;
+              console.log(locArray);
+              // me.getData();
             });
           })
           .catch(function(err) {
             console.log("Fetch Error :-S", err);
           });
       },
-      getLgaPolygon(id) {
+      filterLocations() {
+        let locArray = [];
+        for (var i = 0; i < this.locationsArray.length; i++) {
+          console.log(this.locationsArray[i]);
+          if (this.locationsArray[i].state === this.selectedState.label) {
+            locArray.push(this.locationsArray[i]);
+          }
+        }
+        console.log(locArray);
+        this.filteredLocationsArray = locArray;
+      },
+      getDates() {
         var me = this;
-        fetch("https://api.contactmap.me/geometry/aust_lgas/" + id)
+        fetch("https://api.contactmap.me/dates")
           .then(function(response) {
             if (response.status !== 200) {
               console.log("Looks like there was a problem. Status Code: " + response.status);
               return;
             }
             response.json().then(function(data) {
-              console.log(data.polygon);
+              me.datesArray = data;
+            });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
+          });
+      },
+      getStates() {
+        var me = this;
+        fetch("https://api.contactmap.me/states")
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
+              return;
+            }
+            response.json().then(function(data) {
+              //console.log(data);
+              me.statesArray = data;
+            });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
+          });
+      },
+      getPolygon(table, id) {
+        var me = this;
+        fetch("https://api.contactmap.me/geometry/" + table + "/" + id)
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
+              return;
+            }
+            response.json().then(function(data) {
+              //console.log(data.polygon);
               // let polygonArray = [];
               // for (var i=0; i< data.polygon.coordinates.length; i++) {
               //   polygonArray.push(latLng(data.polygon.coordinates[i]))
               // }
               // Vue.set(me.geojson, data.polygon);
               me.geojson = data.polygon;
+              me.$refs.map.mapObject.flyToBounds(data.bbox);
             });
             // me.activePolygon = me.lgaPolygons[id];
-            console.log(me.geojson);
+            //console.log(me.geojson);
           })
           .catch(function(err) {
             console.log("Fetch Error :-S", err);
           });
       },
-      getHeatmapData() {
+      setDate(obj) {
+        this.selectedDate.value = obj.value;
+        this.getData();
+      },
+      setState(obj) {
+        this.selectedState.value = obj.value;
+        this.filterLocations();
+        this.getData();
+      },
+      getData() {
         var me = this;
-        fetch("https://api.contactmap.me/locations/all/2020-04-16")
+        var layerView = this.showHeatmap ? "heatmap" : "markers";
+        console.log("getting data");
+        fetch("https://api.contactmap.me/locations/" + this.selectedState.value + "/" + this.selectedDate.value)
           .then(function(response) {
             if (response.status !== 200) {
               console.log("Looks like there was a problem. Status Code: " + response.status);
               return;
             }
+            me.showHeatmap = false;
+            me.showClusters = false;
             response.json().then(function(data) {
-              var index = 0;
+              // var index = 0;
+              let latLngArray = [];
+              let caseArray = [];
               for (var i = 0; i < data.length; i++) {
                 if (
                   Object.prototype.hasOwnProperty.call(data[i], "lat") &&
                   Object.prototype.hasOwnProperty.call(data[i], "lng")
                 ) {
                   if (data[i].cases > 0) {
-                    console.log(data[i])
+                    //console.log(data[i]);
                     let myIconSize = data[i].cases > 0 ? (Math.log(data[i].cases) / Math.log(10)) * 25 + 10 : 0;
-                    Vue.set(me.latLngArray, index, [data[i].lat, data[i].lng, data[i].cases]);
-                    Vue.set(me.caseArray, index, {
+                    latLngArray.push([data[i].lat, data[i].lng, data[i].cases]);
+                    caseArray.push({
                       latlng: latLng(data[i].lat, data[i].lng),
                       id: "case-" + data[i].id,
+                      geometry_table: data[i].geometry_table,
+                      geometry_table_id: data[i].geometry_table_id,
                       iconSize: myIconSize,
                       value: data[i].cases.toString(),
                       place: data[i].place + " " + data[i].state,
                     });
-                    index++;
+                    // index++;
                   }
                 }
               }
+              me.latLngArray = latLngArray;
+              me.caseArray = caseArray;
+              me.showHeatmap = layerView === "heatmap";
+              me.showClusters = layerView === "markers";
+
               setTimeout(function() {
+                console.log("resizing");
+                // me.$refs.heatmap.mapObject.redraw();
                 window.dispatchEvent(new Event("resize"));
               }, 20);
             });
@@ -286,6 +430,9 @@
         me.setMapHeight();
       });
       this.getLocations();
+      this.getDates();
+      this.getStates();
+      this.getData();
     },
   };
 </script>
@@ -293,6 +440,7 @@
 <style>
   @import "~leaflet.markercluster/dist/MarkerCluster.css";
   @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+  @import "~vue-select/dist/vue-select.css";
   #cluster-css {
     width: 40px;
     height: 40px;
@@ -303,11 +451,28 @@
     background-color: red;
     border-radius: 40px;
   }
-
+  .v-select {
+    background: white;
+    color: black;
+    text-align: left;
+  }
+  .vue-dynamic-select {
+    width: 250px;
+    background: white;
+    color: black;
+  }
   .leaflet-div-icon {
     border-radius: 20px;
     background: #fd0000;
     border: 1px solid #666;
     color: white;
+  }
+  .vue-dynamic-select .search {
+    width: 250px;
+  }
+  .vue-dynamic-select .result-list {
+    overflow: scroll;
+    background-color: #fff;
+    height: 50vh;
   }
 </style>
