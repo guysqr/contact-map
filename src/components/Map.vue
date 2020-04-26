@@ -23,7 +23,17 @@
     >
       <l-tile-layer :url="url" :attribution="attribution" />
       <l-geo-json :geojson="geojson"></l-geo-json>
-      <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>
+      <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon> -->
+      <LeafletHeatmap
+        v-if="showHeatmap"
+        :lat-lng="latLngPostcodeArray"
+        :max="1"
+        :radius="10"
+        :blur="15"
+        :gradient="heatmapGradient"
+        :minOpacity="0.6"
+        ref="heatmap_postcodes"
+      ></LeafletHeatmap>
       <LeafletHeatmap
         v-if="showHeatmap"
         :lat-lng="latLngArray"
@@ -42,14 +52,32 @@
           v-bind:key="c.id"
           :options="markerOptions"
           ref="c.id"
-          @click="getPolygon(c.geometry_table,c.geometry_table_id)"
+          @click="getPolygon(c.geometry_table, c.geometry_table_id)"
         >
           <l-icon
             :icon="icon"
             :options="iconOptions"
             :iconSize="[c.iconSize, c.iconSize]"
             :iconAnchor="c.iconAnchor"
-            
+          ></l-icon>
+          <l-tooltip :options="{ permanent: false, interactive: true }"
+            >{{ c.value }} Covid-19 Cases<br />{{ c.place }}</l-tooltip
+          >
+        </l-marker>
+        <l-marker
+          v-for="c in casesPostcodes"
+          :lat-lng="c.latlng"
+          :value="c.value"
+          v-bind:key="c.id"
+          :options="markerOptions"
+          ref="c.id"
+          @click="getPolygon(c.geometry_table, c.geometry_table_id)"
+        >
+          <l-icon
+            :icon="icon"
+            :options="iconOptions"
+            :iconSize="[c.iconSize, c.iconSize]"
+            :iconAnchor="c.iconAnchor"
           ></l-icon>
           <l-tooltip :options="{ permanent: false, interactive: true }"
             >{{ c.value }} Covid-19 Cases<br />{{ c.place }}</l-tooltip
@@ -57,12 +85,13 @@
         </l-marker>
       </div>
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
+      <v-geosearch :options="geosearchOptions"></v-geosearch>
       <l-control position="topleft">
         <button @click="clickHandler">
-          Toggle Display
+          Toggle Display Type
         </button>
       </l-control>
-      <l-control position="topleft">
+      <l-control position="topleft" style="z-index: 1000">
         <dynamic-select
           :options="filteredLocationsArray"
           @input="setMapLocation"
@@ -72,7 +101,7 @@
         >
         </dynamic-select>
       </l-control>
-      <l-control position="topleft">
+      <l-control position="topleft" style="z-index: 999">
         <dynamic-select
           :options="datesArray"
           v-model="selectedDate"
@@ -108,7 +137,7 @@
     LControl,
     LControlScale,
     LIcon,
-    LPolygon,
+    // LPolygon,
     LGeoJson,
   } from "vue2-leaflet";
 
@@ -116,7 +145,9 @@
 
   import LeafletHeatmap from "./Vue2LeafletHeatmap";
   import Vue2LeafletDrawToolbar from "vue2-leaflet-draw-toolbar";
-  import Vue from "vue";
+  // import Vue from "vue";
+  import { OpenStreetMapProvider } from "leaflet-geosearch";
+  import VGeosearch from "vue2-leaflet-geosearch";
 
   export default {
     name: "MapPanel",
@@ -129,24 +160,27 @@
       LControl,
       LControlScale,
       LIcon,
-      LPolygon,
+      // LPolygon,
       LGeoJson,
       "l-draw-toolbar": Vue2LeafletDrawToolbar,
       DynamicSelect,
+      VGeosearch,
     },
     data() {
       var corner1 = latLng(-55.11579, 72.5781078),
-        corner2 = latLng(-9.1406926, 167.9965857 ),
+        corner2 = latLng(-9.1406926, 167.9965857),
         bounds = latLngBounds(corner1, corner2);
       return {
         zoom: 5,
         showClusters: false,
         showHeatmap: true,
         heatmapGradient: { 0.3: "rgba(250,1,1,1)", 0.5: "rgba(250,1,1,1)", 1: "rgba(250,1,1,1)" },
-        latLngArray: [],
         maxValue: 0.1,
+        latLngArray: [],
         caseArray: [],
-        locations: {},
+        latLngPostcodeArray: [],
+        casePostcodeArray: [],
+        locationsLookup: {},
         locationsArray: [],
         filteredLocationsArray: [],
         selectedState: { label: "Australia", value: "all" },
@@ -189,11 +223,18 @@
           minZoom: 5,
         },
         showMap: true,
+        geosearchOptions: {
+          // Important part Here
+          provider: new OpenStreetMapProvider(),
+        },
       };
     },
     computed: {
       cases: function() {
         return this.caseArray;
+      },
+      casesPostcodes: function() {
+        return this.casePostcodeArray;
       },
     },
     methods: {
@@ -266,7 +307,8 @@
               return;
             }
             response.json().then(function(data) {
-              Vue.set(me.locations, data);
+              me.locationsLookup = data;
+              console.log(me.locationsLookup);
               let locArray = [];
               for (var key in data) {
                 //console.log(key);
@@ -283,7 +325,9 @@
               }
               me.locationsArray = me.filteredLocationsArray = locArray;
               console.log(locArray);
-              // me.getData();
+              // me.getPlaceData();
+              me.getPlaceData();
+              me.getPostcodeData();
             });
           })
           .catch(function(err) {
@@ -300,6 +344,22 @@
         }
         console.log(locArray);
         this.filteredLocationsArray = locArray;
+      },
+      dataForLocation(id) {
+        var me = this;
+        fetch("https://api.contactmap.me/by_glid/" + id)
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
+              return;
+            }
+            response.json().then(function(data) {
+              me.dataLookup["gl-" + id] = data;
+            });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
+          });
       },
       getDates() {
         var me = this;
@@ -361,18 +421,20 @@
       },
       setDate(obj) {
         this.selectedDate.value = obj.value;
-        this.getData();
+        this.getPlaceData();
+        this.getPostcodeData();
       },
       setState(obj) {
         this.selectedState.value = obj.value;
         this.filterLocations();
-        this.getData();
+        this.getPlaceData();
+        this.getPostcodeData();
       },
-      getData() {
+      getPlaceData() {
         var me = this;
         var layerView = this.showHeatmap ? "heatmap" : "markers";
         console.log("getting data");
-        fetch("https://api.contactmap.me/locations/" + this.selectedState.value + "/" + this.selectedDate.value)
+        fetch("https://api.contactmap.me/by_place/" + this.selectedState.value + "/" + this.selectedDate.value)
           .then(function(response) {
             if (response.status !== 200) {
               console.log("Looks like there was a problem. Status Code: " + response.status);
@@ -384,23 +446,23 @@
               // var index = 0;
               let latLngArray = [];
               let caseArray = [];
-              for (var i = 0; i < data.length; i++) {
+              for (var key in data) {
                 if (
-                  Object.prototype.hasOwnProperty.call(data[i], "lat") &&
-                  Object.prototype.hasOwnProperty.call(data[i], "lng")
+                  Object.prototype.hasOwnProperty.call(data[key], "lat") &&
+                  Object.prototype.hasOwnProperty.call(data[key], "lng")
                 ) {
-                  if (data[i].cases > 0) {
+                  if (data[key].cases > 0) {
                     //console.log(data[i]);
-                    let myIconSize = data[i].cases > 0 ? (Math.log(data[i].cases) / Math.log(10)) * 25 + 10 : 0;
-                    latLngArray.push([data[i].lat, data[i].lng, data[i].cases]);
+                    let myIconSize = data[key].cases > 0 ? (Math.log(data[key].cases) / Math.log(10)) * 25 + 10 : 0;
+                    latLngArray.push([data[key].lat, data[key].lng, data[key].cases]);
                     caseArray.push({
-                      latlng: latLng(data[i].lat, data[i].lng),
-                      id: "case-" + data[i].id,
-                      geometry_table: data[i].geometry_table,
-                      geometry_table_id: data[i].geometry_table_id,
+                      latlng: latLng(data[key].lat, data[key].lng),
+                      id: "place-" + data[key].id,
+                      geometry_table: data[key].geometry_table,
+                      geometry_table_id: data[key].geometry_table_id,
                       iconSize: myIconSize,
-                      value: data[i].cases.toString(),
-                      place: data[i].place + " " + data[i].state,
+                      value: data[key].cases.toString(),
+                      place: data[key].place + " " + data[key].state,
                     });
                     // index++;
                   }
@@ -411,11 +473,61 @@
               me.showHeatmap = layerView === "heatmap";
               me.showClusters = layerView === "markers";
 
-              setTimeout(function() {
-                console.log("resizing");
-                // me.$refs.heatmap.mapObject.redraw();
-                window.dispatchEvent(new Event("resize"));
-              }, 20);
+              // setTimeout(function() {
+              //   console.log("resizing");
+              //   // me.$refs.heatmap.mapObject.redraw();
+              //   window.dispatchEvent(new Event("resize"));
+              // }, 20);
+            });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
+          });
+      },
+      getPostcodeData() {
+        var me = this;
+        var layerView = this.showHeatmap ? "heatmap" : "markers";
+        console.log("getting data");
+        fetch("https://api.contactmap.me/by_postcode/" + this.selectedState.value + "/" + this.selectedDate.value)
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
+              return;
+            }
+            me.showHeatmap = false;
+            me.showClusters = false;
+            response.json().then(function(data) {
+              console.log(data);
+              let latLngArray = [];
+              let caseArray = [];
+              for (var key in data) {
+                if (
+                  me.locationsLookup &&
+                  Object.prototype.hasOwnProperty.call(me.locationsLookup, key) &&
+                  Object.prototype.hasOwnProperty.call(me.locationsLookup[key], "lat") &&
+                  Object.prototype.hasOwnProperty.call(me.locationsLookup[key], "lng")
+                ) {
+                  if (data[key].cases > 0 && me.locationsLookup[key].lat && me.locationsLookup[key].lng) {
+                    let myIconSize = data[key].cases > 0 ? (Math.log(data[key].cases) / Math.log(10)) * 25 + 10 : 0;
+                    latLngArray.push([me.locationsLookup[key].lat, me.locationsLookup[key].lng, data[key].cases]);
+                    caseArray.push({
+                      latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
+                      id: "postcode-" + key,
+                      geometry_table: me.locationsLookup[key].geometry_table,
+                      geometry_table_id: me.locationsLookup[key].geometry_table_id,
+                      iconSize: myIconSize,
+                      value: data[key].cases.toString(),
+                      place: data[key].place + " " + data[key].postcode + " " + data[key].state
+                    });
+                  }
+                }
+              }
+              me.latLngPostcodeArray = latLngArray;
+              me.casePostcodeArray = caseArray;
+              console.log(me.latLngPostcodeArray);
+              console.log(me.casePostcodeArray);
+              me.showHeatmap = layerView === "heatmap";
+              me.showClusters = layerView === "markers";
             });
           })
           .catch(function(err) {
@@ -432,7 +544,6 @@
       this.getLocations();
       this.getDates();
       this.getStates();
-      this.getData();
     },
   };
 </script>
@@ -474,5 +585,8 @@
     overflow: scroll;
     background-color: #fff;
     height: 50vh;
+  }
+  button {
+    padding: 10px;
   }
 </style>
