@@ -15,6 +15,6 @@ export default new Router({
     { path: '/logout', name: 'logout', component: Logout, meta: { title: "Logout", body: "Please log out" } },
     { path: '/map', name: 'map', component: MapPanel, meta: { title: "Contact Map" } },
     { path: '/settings', name: 'settings', component: Settings, meta: { title: "Settings" } },
-    { path: '*', redirect: { name: 'home' } },
+    { path: '*', redirect: { name: 'map' } },
   ],
 });

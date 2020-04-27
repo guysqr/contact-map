@@ -88,7 +88,7 @@
       <v-geosearch :options="geosearchOptions"></v-geosearch>
       <l-control position="topleft">
         <button @click="clickHandler">
-          Toggle Display Type
+          Toggle Data View
         </button>
       </l-control>
       <l-control position="topleft" style="z-index: 1000">
@@ -587,6 +587,13 @@
     height: 50vh;
   }
   button {
-    padding: 10px;
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
   }
 </style>

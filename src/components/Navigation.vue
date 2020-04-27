@@ -2,11 +2,11 @@
   <div id="Navigation" class="navbar navbar-light">
     <div class="container">
       <ul class="navbar-nav">
-        <li class="nav-item active">
-          <router-link to="/" class="nav-link" href="">Home</router-link>
-        </li>
         <li class="nav-item">
           <router-link to="/map" class="nav-link" href="">Map</router-link>
+        </li>
+        <li class="nav-item active">
+          <router-link to="/" class="nav-link" href="">About</router-link>
         </li>
         <li class="nav-item">
           <router-link to="/settings" class="nav-link" href="">Settings</router-link>
