@@ -15,7 +15,6 @@
           <router-link to="/login" class="nav-link">Log In</router-link>
         </li>
         <li class="nav-item" v-if="signedIn">
-          <!-- <amplify-sign-out></amplify-sign-out> -->
           <router-link to="/logout" class="nav-link">Log Out</router-link>
         </li>
       </ul>

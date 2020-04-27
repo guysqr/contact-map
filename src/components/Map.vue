@@ -86,12 +86,12 @@
       </div>
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
-      <l-control position="topleft">
+      <l-control position="topleft" style="z-index: 760">
         <button @click="clickHandler">
           Toggle Data View
         </button>
       </l-control>
-      <l-control position="topleft" style="z-index: 1000">
+      <l-control position="topleft" style="z-index: 740">
         <dynamic-select
           :options="filteredLocationsArray"
           @input="setMapLocation"
@@ -101,7 +101,7 @@
         >
         </dynamic-select>
       </l-control>
-      <l-control position="topleft" style="z-index: 999">
+      <l-control position="topleft" style="z-index: 720">
         <dynamic-select
           :options="datesArray"
           v-model="selectedDate"
@@ -111,7 +111,7 @@
         >
         </dynamic-select>
       </l-control>
-      <l-control position="topleft">
+      <l-control position="topleft" style="z-index: 700">
         <dynamic-select
           :options="statesArray"
           v-model="selectedState"
@@ -517,7 +517,7 @@
                       geometry_table_id: me.locationsLookup[key].geometry_table_id,
                       iconSize: myIconSize,
                       value: data[key].cases.toString(),
-                      place: data[key].place + " " + data[key].postcode + " " + data[key].state
+                      place: data[key].place + " " + data[key].postcode + " " + data[key].state,
                     });
                   }
                 }
@@ -587,7 +587,7 @@
     height: 50vh;
   }
   button {
-    background-color: #4CAF50; /* Green */
+    background-color: #4caf50; /* Green */
     border: none;
     color: white;
     padding: 10px 20px;
@@ -595,5 +595,11 @@
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
+  }
+  .leaflet-control-geosearch .results > * {
+    color: black;
+  }
+  .leaflet-control {
+    z-index: 2000;
   }
 </style>
