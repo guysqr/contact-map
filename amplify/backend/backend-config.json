@@ -22,5 +22,13 @@
 			"service": "S3",
 			"providerPlugin": "awscloudformation"
 		}
-	}
+	},
+	"function": {
+		"contactmapplacedata": {
+			"build": true,
+			"providerPlugin": "awscloudformation",
+			"service": "Lambda"
+		}
+	},
+	"api": {}
 }

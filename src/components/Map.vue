@@ -19,29 +19,32 @@
       @update:center="centerUpdate"
       @update:zoom="zoomUpdate"
       ref="map"
-      style="width:100%; height: 100vh;"
+      style="width:100%; height: 100vh; "
     >
       <l-tile-layer :url="url" :attribution="attribution" />
       <l-geo-json :geojson="geojson"></l-geo-json>
-      <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon> -->
+      <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>        :gradient="heatmapGradient"
+ -->
       <LeafletHeatmap
         v-if="showHeatmap"
         :lat-lng="latLngPostcodeArray"
-        :max="1"
+        :max="10"
         :radius="10"
         :blur="15"
-        :gradient="heatmapGradient"
-        :minOpacity="0.6"
+        :minOpacity="1"
+        :maxOpacity="0.9"
+        :gradient="heatmapGradient3"
         ref="heatmap_postcodes"
       ></LeafletHeatmap>
       <LeafletHeatmap
         v-if="showHeatmap"
         :lat-lng="latLngArray"
-        :max="1"
+        :max="10"
         :radius="10"
         :blur="15"
-        :gradient="heatmapGradient"
-        :minOpacity="0.6"
+        :gradient="heatmapGradient3"
+        :minOpacity="1"
+        :maxOpacity="0.9"
         ref="heatmap"
       ></LeafletHeatmap>
       <div v-if="showClusters">
@@ -167,15 +170,27 @@
       VGeosearch,
     },
     data() {
-      var corner1 = latLng(-55.11579, 72.5781078),
-        corner2 = latLng(-9.1406926, 167.9965857),
+      var corner1 = latLng(-44.276671, 110.742188),
+        corner2 = latLng(-9.622414, 156.577148),
         bounds = latLngBounds(corner1, corner2);
       return {
         zoom: 5,
         showClusters: false,
         showHeatmap: true,
         heatmapGradient: { 0.3: "rgba(250,1,1,1)", 0.5: "rgba(250,1,1,1)", 1: "rgba(250,1,1,1)" },
-        maxValue: 0.1,
+        heatmapGradient2: {
+          0.2: "#ffffb2",
+          0.4: "#fd8d3c",
+          0.6: "#fd8d3c",
+          0.8: "#f03b20",
+          1: "#bd0026",
+        },
+        heatmapGradient3: {
+          0.0: "yellow",
+          0.5: "orange",
+          1.0: "red",
+        },
+        maxValue: 100,
         latLngArray: [],
         caseArray: [],
         latLngPostcodeArray: [],
@@ -602,4 +617,7 @@
   .leaflet-control {
     z-index: 2000;
   }
+  /* .leaflet-tile-pane {
+    filter:  sepia(270) saturate(1) invert(100);
+  } */
 </style>
