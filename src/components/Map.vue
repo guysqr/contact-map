@@ -22,7 +22,7 @@
       style="width:100%; height: 100vh; "
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json :geojson="geojson"></l-geo-json>
+      <l-geo-json :geojson="geojson" ref="polygons" :options="geojsonStyle"></l-geo-json>
       <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>        :gradient="heatmapGradient"
  -->
       <LeafletHeatmap
@@ -55,7 +55,7 @@
           v-bind:key="c.id"
           :options="markerOptions"
           ref="c.id"
-          @click="getPolygon(c.geometry_table, c.geometry_table_id)"
+          @click="getPolygon(c)"
         >
           <l-icon
             :icon="icon"
@@ -74,7 +74,7 @@
           v-bind:key="c.id"
           :options="markerOptions"
           ref="c.id"
-          @click="getPolygon(c.geometry_table, c.geometry_table_id)"
+          @click="getPolygon(c)"
         >
           <l-icon
             :icon="icon"
@@ -190,6 +190,7 @@
           0.5: "orange",
           1.0: "red",
         },
+        dataColorLookup: [],
         maxValue: 100,
         latLngArray: [],
         caseArray: [],
@@ -208,6 +209,7 @@
           type: "Point",
           coordinates: [30, 10],
         },
+        geojsonStyle: { style: { color: "red", fillColor: "green" } },
         icon: L.icon({
           iconUrl: "https://www.contactmap.me/img/coronavirus.svg",
         }),
@@ -269,7 +271,7 @@
         //console.log(obj);
         if (obj && Object.prototype.hasOwnProperty.call(obj, "value")) {
           this.$refs.map.mapObject.flyTo(obj.value, 12);
-          this.getPolygon(obj.geotable, obj.geoid);
+          this.getPolygon(obj);
         }
       },
       // iconCreateFunction(cluster) {
@@ -409,22 +411,26 @@
             console.log("Fetch Error :-S", err);
           });
       },
-      getPolygon(table, id) {
+      getPolygon(obj) {
         var me = this;
-        fetch("https://api.contactmap.me/geometry/" + table + "/" + id)
+        fetch("https://api.contactmap.me/geometry/" + obj.geometry_table + "/" + obj.geometry_table_id)
           .then(function(response) {
             if (response.status !== 200) {
               console.log("Looks like there was a problem. Status Code: " + response.status);
               return;
             }
             response.json().then(function(data) {
-              //console.log(data.polygon);
+              console.log(data);
               // let polygonArray = [];
               // for (var i=0; i< data.polygon.coordinates.length; i++) {
               //   polygonArray.push(latLng(data.polygon.coordinates[i]))
               // }
               // Vue.set(me.geojson, data.polygon);
+              console.log(Math.floor(obj.value % 5));
               me.geojson = data.polygon;
+              let colour = obj.value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[obj.value];
+              console.log(colour);
+              me.geojsonStyle.style.color = me.geojsonStyle.style.fillColor = colour;
               me.$refs.map.mapObject.flyToBounds(data.bbox);
             });
             // me.activePolygon = me.lgaPolygons[id];
@@ -556,11 +562,22 @@
       window.addEventListener("resize", function() {
         me.setMapHeight();
       });
+      for (let i=0; i<20; i++) {
+        this.dataColorLookup.push(rgbToHex((255/20)*i, 0, 255));
+      }
+      for (let i=0; i<20; i++) {
+        this.dataColorLookup.push(rgbToHex(255, 0, 255 - Math.ceil((255/20) * i)));
+      }
+      console.log(this.dataColorLookup);
       this.getLocations();
       this.getDates();
       this.getStates();
     },
   };
+
+  function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
 </script>
 
 <style>
