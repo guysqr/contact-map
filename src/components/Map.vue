@@ -12,43 +12,41 @@
     <!-- </div> -->
     <div id="ControlPanel" class="control-panel">
       <div class="control-panel-label">State:</div>
-    <dynamic-select
-      :options="statesArray"
-      v-model="selectedState"
-      @input="setState"
-      option-value="value"
-      option-text="label"
-      style="width: 15em;"
-    ></dynamic-select>
-    <div class="control-panel-label">Date:</div>
-     <dynamic-select
-          :options="datesArray"
-          v-model="selectedDate"
-          @input="setDate"
-          option-value="value"
-          option-text="label"
-          style="width: 15em"
-
-        ></dynamic-select>
-    <div class="control-panel-label">Area:</div>
- <dynamic-select
-          :options="filteredLocationsArray"
-          @input="setMapLocation"
-          option-value="latlng"
-          option-text="label"
-          placeholder="type to search"
-          style="width: 30em"
-
-        ></dynamic-select>
-        <div class="control-panel-label">View:</div>
-        <dynamic-select
-          :options="viewOptions"
-          v-model="selectedView"
-          @input="setViewOption"
-          option-value="value"
-          option-text="label"
-          style="width: 10em"
-        ></dynamic-select>
+      <dynamic-select
+        :options="statesArray"
+        v-model="selectedState"
+        @input="setState"
+        option-value="value"
+        option-text="label"
+        style="width: 15em;"
+      ></dynamic-select>
+      <div class="control-panel-label">Date:</div>
+      <dynamic-select
+        :options="datesArray"
+        v-model="selectedDate"
+        @input="setDate"
+        option-value="value"
+        option-text="label"
+        style="width: 15em"
+      ></dynamic-select>
+      <div class="control-panel-label">Area:</div>
+      <dynamic-select
+        :options="filteredLocationsArray"
+        @input="setMapLocation"
+        option-value="latlng"
+        option-text="label"
+        placeholder="type to search"
+        style="width: 22em"
+      ></dynamic-select>
+      <div class="control-panel-label">View:</div>
+      <dynamic-select
+        :options="viewOptions"
+        v-model="selectedView"
+        @input="setViewOption"
+        option-value="value"
+        option-text="label"
+        style="width: 10em"
+      ></dynamic-select>
     </div>
     <l-map
       id="map"
@@ -225,7 +223,10 @@ export default {
         type: "Point",
         coordinates: [30, 10]
       },
-      viewOptions: [ { value: "heat", label: "Heatmap" }, { value: "marker", label: "Markers" }, ],
+      viewOptions: [
+        { value: "heat", label: "Heatmap" },
+        { value: "marker", label: "Markers" }
+      ],
       selectedView: { value: "heat", label: "Heatmap" },
       geojsonStyle: { style: { color: "red", fillColor: "green" } },
       icon: L.icon({
@@ -277,7 +278,7 @@ export default {
     setViewOption(obj) {
       this.selectedView.value = obj.value;
       console.log(obj);
-      if (this.selectedView.value === 'heat') {
+      if (this.selectedView.value === "heat") {
         this.showHeatmap = true;
         this.showClusters = false;
       } else {
@@ -720,7 +721,7 @@ button {
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-weight:bolder;
+  font-weight: bolder;
 }
 .leaflet-control-geosearch .results > * {
   color: black;
@@ -731,25 +732,26 @@ button {
 .control-panel-label {
   padding: 8px 10px;
   color: black;
-  font-weight:bolder;
-} 
+  font-weight: bolder;
+}
 .control-panel {
   background: #74cff0;
-  padding:2px;
-  z-index: 10000; display: flex;
+  padding: 2px;
+  z-index: 10000;
+  display: flex;
 }
 /* .leaflet-control-geosearch .leaflet-bar-part {
   width: 26px;
   height: 26px;
 } */
-.leaflet-toolbar-0>li>.leaflet-toolbar-icon {
+.leaflet-toolbar-0 > li > .leaflet-toolbar-icon {
   width: 26px;
   height: 26px;
 }
 .leaflet-draw-toolbar.leaflet-control-toolbar {
-  box-shadow: 0 1px 8px rgba(0,0,0,0.5);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
 }
 .leaflet-toolbar-0 {
-  border: 0px solid rgba(0,0,0,.2);
+  border: 0px solid rgba(0, 0, 0, 0.2);
 }
 </style>
