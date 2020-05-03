@@ -40,7 +40,7 @@
       style="width:100%; height: 100vh; z-index: 100"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json :geojson="geojson" ref="polygons" :options="geojsonStyle"></l-geo-json>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" :geojson="g.geojson" :options="g.style"></l-geo-json>
       <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>        :gradient="heatmapGradient"
       -->
       <LeafletHeatmap
@@ -109,16 +109,28 @@
       <v-geosearch :options="geosearchOptions"></v-geosearch>
       <l-control position="bottomright" style="z-index: 760">
         <!-- map based controls go here -->
-        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
+        <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
       <l-draw-toolbar position="topleft" />
-      <l-polyline v-for="p in userTracks" v-bind:key="p.start" :lat-lngs="p.points" style="z-index:1000">
-        <l-tooltip :options="{ permanent: false, interactive: true }"> From {{ p.start }} to {{ p.end }}<br />{{ p.description }} </l-tooltip>
+      <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color">
+        <l-tooltip :options="{ permanent: false, interactive: true }"
+          ><strong>Activity:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
+        >
       </l-polyline>
-      <l-circle v-for="p in userLocs" v-bind:key="p.start" :lat-lng="p.points[0]" :radius="200" style="z-index:1001">
-        <l-tooltip :options="{ permanent: false, interactive: true }">
-          From {{ p.start | moment("dddd, MMMM Do YYYY") }} to {{ p.end }}<br />{{ p.description }}
-        </l-tooltip>
+      <l-circle
+        v-for="p in userLocs"
+        v-bind:key="p.id"
+        :lat-lng="p.points[0]"
+        :radius="200"
+        :color="p.style.color"
+        :stroke="p.style.stroke"
+        :fillColor="p.style.color"
+        :fillOpacity="p.style.fillOpacity"
+        style="z-index:1001"
+      >
+        <l-tooltip :options="{ permanent: false, interactive: true }"
+          ><strong>Place:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
+        >
       </l-circle>
       <l-rectangle :bounds="mapBounds" :fill="false" :weight="0"></l-rectangle>
     </l-map>
@@ -240,12 +252,14 @@
           type: "Point",
           coordinates: [30, 10],
         },
+        geojsons: [],
         viewOptions: [
           { value: "heat", label: "Heatmap" },
           { value: "marker", label: "Markers" },
         ],
         selectedView: { value: "heat", label: "Heatmap" },
         geojsonStyle: { style: { color: "red", fillColor: "green", stroke: 1 } },
+        loadedGeojson: {},
         icon: L.icon({
           iconUrl: "https://www.contactmap.me/img/coronavirus.svg",
         }),
@@ -267,9 +281,11 @@
         showParagraph: false,
         accessToken: "pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ",
         mapOptions: {
-          zoomSnap: 0.25,
+          zoomSnap: 0.3,
           scrollWheelZoom: true,
-          wheelPxPerZoomLevel: 120,
+          wheelPxPerZoomLevel: 2000,
+          wheelDebounceTime: 40,
+          fadeAnimation: false,
           maxBounds: maxMapBounds,
           maxZoom: 16,
           minZoom: 5,
@@ -303,20 +319,30 @@
       },
       handleData(file, response) {
         console.log(response);
+        this.$refs.dropzone.removeFile(file);
         let dataDates = [];
+        let setMapBounds = latLngBounds();
+        this.userTracks = [];
+        this.userLocs = [];
         for (var date in response) {
           console.log(date);
           dataDates.push(date);
           for (var i = 0; i < response[date].length; i++) {
-            // response[date][i].start = this.$moment(response[date][i].start).format(' mm:ss');
-            // response[date][i].end = this.$moment(response[date][i].end).format(' mm:ss');
+            response[date][i].style = { "z-index": 1000, color: "black", stroke: false, fillOpacity: 0.4 };
+            response[date][i].id = i + "-" + response[date][i].start;
+            response[date][i].start = formatDatetime(response[date][i].start, true);
+            response[date][i].end = formatDatetime(response[date][i].end);
             if (response[date][i].points.length > 1) {
+              response[date][i].style.color = "#777777";
               this.userTracks.push(response[date][i]);
             } else {
               this.userLocs.push(response[date][i]);
+              setMapBounds.extend(response[date][i].points[0]);
+              this.showDataByLatLng(response[date][i].points[0]);
             }
           }
         }
+        this.$refs.map.mapObject.fitBounds(setMapBounds);
       },
       showDataPolygon(obj) {
         console.log(obj);
@@ -357,6 +383,9 @@
         console.log(obj);
         obj.target.openPopup();
       },
+      showDataByLatLng(ll) {
+        this.showDataUnderClick({ latlng: latLng(ll) });
+      },
       showDataUnderClick(obj) {
         console.log(obj);
         var me = this;
@@ -367,9 +396,38 @@
               return;
             }
             response.json().then(function(data) {
-              console.log(data);
-              console.log(me);
               me.getPolygon(me.locationsLookup["gl-" + data.geocoded_location_id]);
+            });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
+          });
+      },
+      getPolygon(obj) {
+        console.log("Getting polygon " + obj.glid);
+        console.log(obj);
+        var me = this;
+        console.log(me.caseDataLookup);
+        if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, "gl-" + obj.glid)) {
+          console.log("already loaded polygon for " + obj.glid);
+          ///set visible if hidden
+          return;
+        }
+        fetch("https://api.contactmap.me/geometry/" + obj.geotable + "/" + obj.geoid)
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
+              return;
+            }
+            response.json().then(function(data) {
+              if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, "gl-" + obj.glid)) {
+                console.log("already loaded, async");
+              } else {
+                let colour = me.caseDataLookup["gl-" + obj.glid].value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[me.caseDataLookup["gl-" + obj.glid].value];
+                let geojsonObj = { geojson: data.polygon, id: obj.glid, style: { fillColor: colour, color: colour } };
+                me.geojsons.push(geojsonObj);
+                me.loadedGeojson["gl-" + obj.glid] = { loaded: true, visible: true };
+              }
             });
           })
           .catch(function(err) {
@@ -461,26 +519,6 @@
               //console.log(data);
               me.statesArray = data;
               me.selectedState = me.statesArray[0];
-            });
-          })
-          .catch(function(err) {
-            console.log("Fetch Error :-S", err);
-          });
-      },
-      getPolygon(obj) {
-        console.log(obj);
-        var me = this;
-        console.log(me.caseDataLookup);
-        fetch("https://api.contactmap.me/geometry/" + obj.geotable + "/" + obj.geoid)
-          .then(function(response) {
-            if (response.status !== 200) {
-              console.log("Looks like there was a problem. Status Code: " + response.status);
-              return;
-            }
-            response.json().then(function(data) {
-              me.geojson = data.polygon;
-              let colour = me.caseDataLookup["gl-" + obj.glid].value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[me.caseDataLookup["gl-" + obj.glid].value];
-              me.geojsonStyle.style.color = me.geojsonStyle.style.fillColor = colour;
             });
           })
           .catch(function(err) {
@@ -586,8 +624,8 @@
                     latLngArray.push([me.locationsLookup[key].lat, me.locationsLookup[key].lng, data[key].cases]);
                     me.caseDataLookup[key] = {
                       latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
-                      geotable: me.locationsLookup[key].geometry_table,
-                      geoid: me.locationsLookup[key].geometry_table_id,
+                      // geotable: me.locationsLookup[key].geometry_table,
+                      // geoid: me.locationsLookup[key].geometry_table_id,
                       iconSize: myIconSize,
                       value: data[key].cases.toString(),
                       place: data[key].place + " " + data[key].postcode + " " + data[key].state,
@@ -595,8 +633,8 @@
                     caseArray.push({
                       latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
                       glid: key,
-                      geotable: me.locationsLookup[key].geometry_table,
-                      geoid: me.locationsLookup[key].geometry_table_id,
+                      // geotable: me.locationsLookup[key].geometry_table,
+                      // geoid: me.locationsLookup[key].geometry_table_id,
                       iconSize: myIconSize,
                       value: data[key].cases.toString(),
                       place: data[key].place + " " + data[key].postcode + " " + data[key].state,
@@ -659,6 +697,14 @@
 
   function rgbToHex(r, g, b) {
     return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  function formatDatetime(isoString, justTime) {
+    var dateParts = isoString.split(/\D/);
+    if (justTime) {
+      return dateParts[3] + ":" + dateParts[4];
+    }
+    return dateParts[3] + ":" + dateParts[4] + " " + dateParts[2] + "/" + dateParts[1];
   }
 </script>
 
