@@ -112,7 +112,7 @@
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
       <l-draw-toolbar position="topleft" />
-      <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :options="{pane:'shadowPane'}">
+      <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :options="{ pane: 'shadowPane' }">
         <l-tooltip :options="{ permanent: false, interactive: true }"
           ><strong>Activity:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
         >
@@ -126,7 +126,7 @@
         :stroke="p.style.stroke"
         :fillColor="p.style.color"
         :fillOpacity="p.style.fillOpacity"
-        :options="{pane:'shadowPane'}"
+        :options="{ pane: 'shadowPane' }"
       >
         <l-tooltip :options="{ permanent: false, interactive: true }"
           ><strong>Place:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
@@ -362,7 +362,10 @@
           this.$refs.map.mapObject.addLayer(this.$refs.heatmap_postcodes.mapObject);
         }
       },
+      //need to fix this as it does not have the value when calling getPolygon now...
       setMapLocation(obj) {
+        console.log("calling set Map location");
+        console.log(obj);
         if (obj && Object.prototype.hasOwnProperty.call(obj, "value")) {
           let me = this;
           this.hideAllLayers();
@@ -411,7 +414,8 @@
         console.log(obj);
         var me = this;
         console.log(me.caseDataLookup);
-        if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, "gl-" + obj.glid)) {
+        let glid = obj.glid.toString().match(/^gl/) ? obj.glid : "gl-" + obj.glid;
+        if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, glid)) {
           console.log("already loaded polygon for " + obj.glid);
           ///set visible if hidden
           return;
@@ -423,13 +427,13 @@
               return;
             }
             response.json().then(function(data) {
-              if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, "gl-" + obj.glid)) {
+              if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, glid)) {
                 console.log("already loaded, async");
               } else {
-                let colour = me.caseDataLookup["gl-" + obj.glid].value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[me.caseDataLookup["gl-" + obj.glid].value];
+                let colour = me.caseDataLookup[glid].value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[me.caseDataLookup[glid].value];
                 let geojsonObj = { geojson: data.polygon, id: obj.glid, style: { fillColor: colour, color: colour } };
                 me.geojsons.push(geojsonObj);
-                me.loadedGeojson["gl-" + obj.glid] = { loaded: true, visible: true };
+                me.loadedGeojson[glid] = { loaded: true, visible: true };
               }
             });
           })
@@ -465,7 +469,7 @@
                 label += data[key].postal_code ? " - " + data[key].postal_code : "";
                 locArray.push({
                   label: label,
-                  code: key,
+                  glid: key,
                   value: latLng(data[key].lat, data[key].lng),
                   state: data[key].state,
                   geotable: data[key].geotable,
