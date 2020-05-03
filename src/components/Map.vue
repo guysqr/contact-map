@@ -40,7 +40,7 @@
       style="width:100%; height: 100vh; z-index: 100"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" :geojson="g.geojson" :options="g.style"></l-geo-json>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" :geojson="g.geojson" :options="g.style" style="z-index: 100"></l-geo-json>
       <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>        :gradient="heatmapGradient"
       -->
       <LeafletHeatmap
@@ -112,7 +112,7 @@
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
       <l-draw-toolbar position="topleft" />
-      <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color">
+      <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :options="{pane:'shadowPane'}">
         <l-tooltip :options="{ permanent: false, interactive: true }"
           ><strong>Activity:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
         >
@@ -126,7 +126,7 @@
         :stroke="p.style.stroke"
         :fillColor="p.style.color"
         :fillOpacity="p.style.fillOpacity"
-        style="z-index:1001"
+        :options="{pane:'shadowPane'}"
       >
         <l-tooltip :options="{ permanent: false, interactive: true }"
           ><strong>Place:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
@@ -322,8 +322,8 @@
         this.$refs.dropzone.removeFile(file);
         let dataDates = [];
         let setMapBounds = latLngBounds();
-        this.userTracks = [];
-        this.userLocs = [];
+        let userTracks = [];
+        let userLocs = [];
         for (var date in response) {
           console.log(date);
           dataDates.push(date);
@@ -334,15 +334,18 @@
             response[date][i].end = formatDatetime(response[date][i].end);
             if (response[date][i].points.length > 1) {
               response[date][i].style.color = "#777777";
-              this.userTracks.push(response[date][i]);
+              userTracks.push(response[date][i]);
             } else {
-              this.userLocs.push(response[date][i]);
+              userLocs.push(response[date][i]);
               setMapBounds.extend(response[date][i].points[0]);
               this.showDataByLatLng(response[date][i].points[0]);
             }
           }
         }
+        this.userTracks = userTracks;
+        this.userLocs = userLocs;
         this.$refs.map.mapObject.fitBounds(setMapBounds);
+        this.$refs.userTracks.mapObject.bringToFront();
       },
       showDataPolygon(obj) {
         console.log(obj);
