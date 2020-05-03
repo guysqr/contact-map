@@ -4397,6 +4397,11 @@ dotenv@^8.2.0:
   resolved "https://registry.npm.taobao.org/dotenv/download/dotenv-8.2.0.tgz?cache=0&sync_timestamp=1571190782798&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fdotenv%2Fdownload%2Fdotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
   integrity sha1-l+YZJZradQ7qPk6j4mvO6lQksWo=
 
+dropzone@^5.5.1:
+  version "5.7.0"
+  resolved "https://registry.yarnpkg.com/dropzone/-/dropzone-5.7.0.tgz#8d1007f3ebcc6e6d64096823f854d898f7564ef2"
+  integrity sha512-kOltiZXH5cO/72I22JjE+w6BoT6uaVLfWdFMsi1PMKFkU6BZWpqRwjnsRm0o6ANGTBuZar5Piu7m/CbKqRPiYg==
+
 duplexer@^0.1.1:
   version "0.1.1"
   resolved "https://registry.npm.taobao.org/duplexer/download/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
@@ -6747,6 +6752,11 @@ mkdirp@^0.5.1, mkdirp@^0.5.3, mkdirp@~0.5.1:
   integrity sha1-2Rzv1i0UNsoPQWIOJRKI1CAJne8=
   dependencies:
     minimist "^1.2.5"
+
+moment@^2.19.2:
+  version "2.25.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.25.1.tgz#1cb546dca1eccdd607c9324747842200b683465d"
+  integrity sha512-nRKMf9wDS4Fkyd0C9LXh2FFXinD+iwbJ5p/lh3CHitW9kZbRbJ8hCruiadiIXZVbeAqKZzqcTvHnK3mRhFjb6w==
 
 move-concurrently@^1.0.1:
   version "1.0.1"
@@ -9566,6 +9576,13 @@ vue-loader@^15.9.1:
     vue-hot-reload-api "^2.3.0"
     vue-style-loader "^4.1.0"
 
+vue-moment@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/vue-moment/-/vue-moment-4.1.0.tgz#092a8ff723a96c6f85a0a8e23ad30f0bf320f3b0"
+  integrity sha512-Gzisqpg82ItlrUyiD9d0Kfru+JorW2o4mQOH06lEDZNgxci0tv/fua1Hl0bo4DozDV2JK1r52Atn/8QVCu8qQw==
+  dependencies:
+    moment "^2.19.2"
+
 vue-router@^3.1.6:
   version "3.1.6"
   resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-3.1.6.tgz#45f5a3a3843e31702c061dd829393554e4328f89"
@@ -9603,6 +9620,13 @@ vue-window-size@^0.2.5:
   integrity sha512-H7wSusdlZS3zxpm6MTfSIPKPJAqKB8caXHke3M865ZR+L1m3nq3U0LWbMhkPLb3E5+7eO+egCxHO0JpkCshSvg==
   dependencies:
     vue "^2.5.22"
+
+vue2-dropzone@^3.6.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/vue2-dropzone/-/vue2-dropzone-3.6.0.tgz#b4bb4b64de1cbbb3b88f04b24878e06780a51546"
+  integrity sha512-YXC1nCWIZvfa98e/i6h+EshZCkFSxFEh0Sxr9ODfThAPPDVhAzLLlz/4XIx0NGO1QeSy6htwSstte47R7vVhLQ==
+  dependencies:
+    dropzone "^5.5.1"
 
 vue2-filters@^0.7.2:
   version "0.7.2"

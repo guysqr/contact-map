@@ -8,21 +8,24 @@ import router from "./router";
 import { LMap, LTileLayer, LMarker } from "vue2-leaflet";
 import "leaflet/dist/leaflet.css";
 import VueWindowSize from "vue-window-size";
+import VueMoment from 'vue-moment';
 
 Vue.component("l-map", LMap);
 Vue.component("l-tile-layer", LTileLayer);
 Vue.component("l-marker", LMarker);
 
 Amplify.configure(aws_exports);
-Vue.use(AmplifyPlugin, AmplifyModules, VueWindowSize);
+Vue.use(AmplifyPlugin, AmplifyModules, VueWindowSize, VueMoment);
 
 Vue.config.productionTip = false;
 
-// delete L.Icon.Default.prototype._getIconUrl;
-
 new Vue({
   router,
-  components: { LMap, LTileLayer, LMarker },
+  components: {
+    LMap,
+    LTileLayer,
+    LMarker,
+  },
   render: (h) => h(App),
 }).$mount("#app");
 
