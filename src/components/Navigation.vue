@@ -1,7 +1,7 @@
 <template>
   <div id="Navigation" class="navbar navbar-light">
     <div class="container">
-      <ul class="navbar-nav">
+      <ul class="navbar-nav" style="padding: 0px 12px;">
         <li class="nav-item">
           <router-link to="/" class="nav-link" href="">Map</router-link>
         </li>
@@ -53,9 +53,12 @@
   .router-link-exact-active {
     background-color: #333;
   }
+  .navbar-nav {
+    padding: 0px 12px;
+  }
   .nav-item {
     list-style-type: none;
-    padding: 0px 12px;
+    padding: 0px 6px 0px 6px;
   }
   .nav-link {
     padding: 12px 10px;

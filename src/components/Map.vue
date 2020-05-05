@@ -30,7 +30,15 @@
       style="width:100%; height: 100vh; z-index: 100"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showPopupGeojson(g)" @mouseout="hidePopupGeojson" :geojson="g.geojson" :options="g.style">
+      <l-geo-json
+        v-for="g in geojsons"
+        v-bind:key="g.id"
+        @mouseover="showPopupGeojson(g)"
+        @mouseout="hidePopupGeojson"
+        :geojson="g.geojson"
+        @click="hidePolygon"
+        :options="g.style"
+      >
         <!-- <l-popup>{{ g.content }}</l-popup> -->
       </l-geo-json>
 
@@ -367,7 +375,9 @@
         console.log(obj);
         obj.target.openPopup();
       },
-      hidePopupGeojson() {
+      hidePopupGeojson() {},
+      hidePolygon(event) {
+        console.log(event);
       },
       showPopupGeojson(geojson) {
         console.log(geojson);
@@ -420,18 +430,25 @@
               if (Object.prototype.hasOwnProperty.call(me.loadedGeojson, glid)) {
                 console.log("already loaded, async");
               } else {
-                let colour = me.caseDataLookup[glid].value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[me.caseDataLookup[glid].value];
-                let geojsonObj = {
-                  geojson: data.polygon,
-                  id: obj.glid,
-                  style: { fillColor: colour, color: colour },
-                  value: me.caseDataLookup[glid].value,
-                  content: me.caseDataLookup[glid].content,
-                  latlng: me.caseDataLookup[glid].latlng,
-                  bbox: data.bbox
-                };
-                me.geojsons.push(geojsonObj);
-                me.loadedGeojson[glid] = { loaded: true, visible: true };
+                if (Object.prototype.hasOwnProperty.call(me.caseDataLookup, glid)) {
+                  let colour = "#fffffff";
+                  let value = 0;
+                  if (Object.prototype.hasOwnProperty.call(me.caseDataLookup[glid], "value")) {
+                    value = me.caseDataLookup[glid].value;
+                    colour = value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[value];
+                  }
+                  let geojsonObj = {
+                    geojson: data.polygon,
+                    id: obj.glid,
+                    style: { fillColor: colour, color: colour },
+                    value: value,
+                    content: me.caseDataLookup[glid].content,
+                    latlng: me.caseDataLookup[glid].latlng,
+                    bbox: data.bbox,
+                  };
+                  me.geojsons.push(geojsonObj);
+                  me.loadedGeojson[glid] = { loaded: true, visible: true };
+                }
               }
             });
           })
@@ -787,14 +804,17 @@
     display: flex;
   }
   .leaflet-toolbar-0 > li > .leaflet-toolbar-icon {
-    width: 26px;
-    height: 26px;
+    width: 26px !important;
+    height: 26px !important;
   }
   .leaflet-draw-toolbar.leaflet-control-toolbar {
-    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5) !important;
   }
+  /* .leaflet-bar {
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  } */
   .leaflet-toolbar-0 {
-    border: 0px solid rgba(0, 0, 0, 0.2);
+    border: 0px solid rgba(0, 0, 0, 0.2) !important;
   }
   .dropzone .dz-message {
     margin: 0;
