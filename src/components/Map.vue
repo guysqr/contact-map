@@ -101,7 +101,14 @@
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
       <l-draw-toolbar position="topleft" />
-      <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :options="{ pane: 'shadowPane' }">
+      <l-polyline
+        v-for="p in userTracks"
+        v-bind:key="p.id"
+        :lat-lngs="p.points"
+        :color="p.style.color"
+        ref="userTracks"
+        :options="{ pane: 'shadowPane', weight: 4, opacity: 0.4 }"
+      >
         <l-tooltip :options="{ permanent: false, interactive: true }"
           ><strong>Activity:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}
         </l-tooltip>
@@ -266,7 +273,7 @@
           'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         withPopup: latLng(-37.799278, 145.059956),
         withTooltip: latLng(-33.8858088, 151.10248109002),
-        mapZoom: 11.5,
+        mapZoom: 5,
         showParagraph: false,
         accessToken: "pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ",
         mapOptions: {
@@ -798,7 +805,8 @@
     font-weight: bolder;
   }
   .control-panel {
-    background: #74cff0;
+    /* background: #74cff0; */
+    background-color: #beccda;
     padding: 2px;
     z-index: 10000;
     display: flex;
@@ -810,9 +818,6 @@
   .leaflet-draw-toolbar.leaflet-control-toolbar {
     box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5) !important;
   }
-  /* .leaflet-bar {
-    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
-  } */
   .leaflet-toolbar-0 {
     border: 0px solid rgba(0, 0, 0, 0.2) !important;
   }
@@ -821,11 +826,11 @@
   }
   .dropzone {
     min-height: auto;
-    background: #e8e9ce;
+    background: #dff35e;
     color: black;
   }
   .dropzone:hover {
-    background: rgb(255, 237, 178);
+    background:#ddff00;
   }
   .vue-dropzone {
     border: 1px dashed #1f1f1f;
