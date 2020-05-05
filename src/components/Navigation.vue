@@ -8,15 +8,15 @@
         <li class="nav-item active">
           <router-link to="/about" class="nav-link" href="">About</router-link>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link to="/settings" class="nav-link" href="">Settings</router-link>
-        </li>
-        <li class="nav-item" v-if="!signedIn">
+        </li> -->
+        <!-- <li class="nav-item" v-if="!signedIn">
           <router-link to="/login" class="nav-link">Log In</router-link>
         </li>
         <li class="nav-item" v-if="signedIn">
           <router-link to="/logout" class="nav-link">Log Out</router-link>
-        </li>
+        </li> -->
       </ul>
     </div>
   </div>

@@ -1,15 +1,5 @@
 <template>
-  <!-- <div style="height: calc(100vh - 200px); width: 100%"> -->
   <div class="map-panel">
-    <!-- <p>First marker is placed at {{ withPopup.lat }}, {{ withPopup.lng }}. Window height= {{ mapHeight }}</p>
-      <p>Center is at {{ mapCentre }} and the zoom is: {{ mapZoom }}</p>
-      <button @click="showLongText">
-        Toggle long popup
-      </button>
-      <button @click="showMap = !showMap">
-        Toggle map
-    </button>-->
-    <!-- </div> -->
     <div id="ControlPanel" class="control-panel">
       <div class="control-panel-label">State:</div>
       <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select>
@@ -40,9 +30,10 @@
       style="width:100%; height: 100vh; z-index: 100"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" :geojson="g.geojson" :options="g.style" style="z-index: 100"></l-geo-json>
-      <!-- <l-polygon :lat-lngs="activePolygon.latlngs" :color="activePolygon.color"></l-polygon>        :gradient="heatmapGradient"
-      -->
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showPopupGeojson(g)" @mouseout="hidePopupGeojson" :geojson="g.geojson" :options="g.style">
+        <!-- <l-popup>{{ g.content }}</l-popup> -->
+      </l-geo-json>
+
       <LeafletHeatmap
         v-if="showHeatmap"
         :lat-lng="latLngPostcodeArray"
@@ -78,12 +69,7 @@
           @click="getPolygon(c)"
         >
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
-          <l-popup :content="c.content" :latLng="c.latlng"></l-popup>
-          <!-- <l-tooltip :options="{ permanent: false, interactive: true, offset: [-((c.iconSize/2)+2),0] }">
-            {{ c.value }} Covid-19 Cases
-            <br />
-            {{ c.place }}
-          </l-tooltip> -->
+          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
         </l-marker>
         <l-marker
           v-for="c in casesPostcodes"
@@ -97,12 +83,7 @@
           @click="getPolygon(c)"
         >
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
-          <l-popup :content="c.content" :latLng="c.latlng"></l-popup>
-          <!-- <l-tooltip :options="{ permanent: false, interactive: true }">
-            {{ c.value }} Covid-19 Cases
-            <br />
-            {{ c.place }}
-          </l-tooltip> -->
+          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
         </l-marker>
       </div>
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
@@ -114,8 +95,8 @@
       <l-draw-toolbar position="topleft" />
       <l-polyline v-for="p in userTracks" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :options="{ pane: 'shadowPane' }">
         <l-tooltip :options="{ permanent: false, interactive: true }"
-          ><strong>Activity:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
-        >
+          ><strong>Activity:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}
+        </l-tooltip>
       </l-polyline>
       <l-circle
         v-for="p in userLocs"
@@ -129,8 +110,8 @@
         :options="{ pane: 'shadowPane' }"
       >
         <l-tooltip :options="{ permanent: false, interactive: true }"
-          ><strong>Place:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}</l-tooltip
-        >
+          ><strong>Place:</strong> {{ p.description }}<br /><strong>From:</strong> {{ p.start }} to {{ p.end }}
+        </l-tooltip>
       </l-circle>
       <l-rectangle :bounds="mapBounds" :fill="false" :weight="0"></l-rectangle>
     </l-map>
@@ -295,6 +276,7 @@
           // Important part Here
           provider: new OpenStreetMapProvider(),
         },
+        geoJsonPopup: {},
       };
     },
     computed: {
@@ -362,7 +344,6 @@
           this.$refs.map.mapObject.addLayer(this.$refs.heatmap_postcodes.mapObject);
         }
       },
-      //need to fix this as it does not have the value when calling getPolygon now...
       setMapLocation(obj) {
         console.log("calling set Map location");
         console.log(obj);
@@ -373,7 +354,7 @@
             me.showAllLayers();
           });
           this.getPolygon(obj);
-          this.$refs.map.mapObject.setView(obj.value, 11);
+          this.$refs.map.mapObject.fitBounds([obj.bbox]);
         }
       },
       zoomUpdate(zoom) {
@@ -382,12 +363,21 @@
       centerUpdate(center) {
         this.mapCentre = center;
       },
-      showLongText() {
-        this.showParagraph = !this.showParagraph;
-      },
       showPopup(obj) {
         console.log(obj);
         obj.target.openPopup();
+      },
+      hidePopupGeojson() {
+      },
+      showPopupGeojson(geojson) {
+        console.log(geojson);
+        this.geoJsonPopup = L.popup({ closeButton: false })
+          .setLatLng(geojson.latlng)
+          .setContent(geojson.content)
+          .openOn(this.$refs.map.mapObject);
+        // this.$refs.map.mapObject.openPopup(obj.value, 11);
+        // evt.layer.openPopup();
+        // obj.target.openPopup(obj.content,obj.latlng);
       },
       showDataByLatLng(ll) {
         this.showDataUnderClick({ latlng: latLng(ll) });
@@ -431,7 +421,15 @@
                 console.log("already loaded, async");
               } else {
                 let colour = me.caseDataLookup[glid].value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[me.caseDataLookup[glid].value];
-                let geojsonObj = { geojson: data.polygon, id: obj.glid, style: { fillColor: colour, color: colour } };
+                let geojsonObj = {
+                  geojson: data.polygon,
+                  id: obj.glid,
+                  style: { fillColor: colour, color: colour },
+                  value: me.caseDataLookup[glid].value,
+                  content: me.caseDataLookup[glid].content,
+                  latlng: me.caseDataLookup[glid].latlng,
+                  bbox: data.bbox
+                };
                 me.geojsons.push(geojsonObj);
                 me.loadedGeojson[glid] = { loaded: true, visible: true };
               }
@@ -468,6 +466,7 @@
                 let label = data[key].place_data;
                 label += data[key].postal_code ? " - " + data[key].postal_code : "";
                 locArray.push({
+                  bbox: data[key].bbox,
                   label: label,
                   glid: key,
                   value: latLng(data[key].lat, data[key].lng),
@@ -544,7 +543,9 @@
         this.caseArray = [];
         this.latLngArray = [];
         this.caseArray = [];
-        if (obj.label !== "Australia") {
+        if (obj.label === "Australia") {
+          this.$refs.map.mapObject.fitBounds(this.mapBounds);
+        } else {
           this.$refs.map.mapObject.fitBounds(obj.value.bbox);
         }
         // this.mapBounds = obj.value.bbox;
@@ -578,6 +579,7 @@
                       geoid: data[key].geometry_table_id,
                       iconSize: myIconSize,
                       value: data[key].cases.toString(),
+                      content: data[key].cases.toString() + " Covid-19 Cases<br>" + data[key].place + " " + data[key].state,
                       place: data[key].place + " " + data[key].state,
                     };
                     caseArray.push({
@@ -635,6 +637,7 @@
                       // geoid: me.locationsLookup[key].geometry_table_id,
                       iconSize: myIconSize,
                       value: data[key].cases.toString(),
+                      content: data[key].cases.toString() + " Covid-19 Cases<br>" + data[key].place + " " + data[key].postcode + " " + data[key].state,
                       place: data[key].place + " " + data[key].postcode + " " + data[key].state,
                     };
                     caseArray.push({
