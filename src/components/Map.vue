@@ -17,11 +17,11 @@
       <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPostcodeArray" :max="10" :radius="10" :blur="15" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
       <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPlaceArray" :max="10" :radius="10" :blur="15" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap"></LeafletHeatmap>
       <div v-if="showMarkers" ref="markerLayer">
-        <l-marker v-for="c in casesPlaces" :lat-lng="c.latlng" :value="c.value" v-bind:key="c.id" :options="markerOptions" :ref="c.id" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c,$event)">
+        <l-marker v-for="c in casesPlaces" :lat-lng="c.latlng" :value="c.value" v-bind:key="c.id" :options="markerOptions" :ref="c.id" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
           <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
         </l-marker>
-        <l-marker v-for="c in casesPostcodes" :lat-lng="c.latlng" :value="c.value" v-bind:key="c.id" :options="markerOptions" :ref="c.id" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c,$event)">
+        <l-marker v-for="c in casesPostcodes" :lat-lng="c.latlng" :value="c.value" v-bind:key="c.id" :options="markerOptions" :ref="c.id" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
           <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
         </l-marker>
@@ -315,8 +315,10 @@
       },
       showDataUnderClick(obj) {
         console.log("showDataUnderClick");
-        obj.originalEvent.stopPropagation();
         console.log(obj);
+        if (Object.prototype.hasOwnProperty.call(obj, "originalEvent")) {
+          obj.originalEvent.stopPropagation();
+        }
         var me = this;
         fetch("https://api.contactmap.me/glid_for_latlng/" + obj.latlng.lat + "/" + obj.latlng.lng)
           .then(function(response) {
@@ -332,7 +334,7 @@
             console.log("Fetch Error :-S", err);
           });
       },
-      showPolygon(obj,event) {
+      showPolygon(obj, event) {
         if (event) {
           event.originalEvent.stopPropagation();
         }
@@ -343,21 +345,29 @@
         let glid = obj.glid;
         if (Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, glid)) {
           console.log("already loaded polygon for " + obj.glid);
+          if (this.geoJsonStatusLookup[glid].loading) {
+            console.log("already loading " + glid);
+            return;
+          }
           if (!this.geoJsonStatusLookup[glid].visible) {
             this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
             this.geoJsonStatusLookup[glid].visible = true;
           } else {
-            //hide the geojson
-            let newArray = [];
-            for (let i = 0; i < this.geojsons.length; i++) {
-              if (this.geojsons[i].id !== glid) {
-                newArray.push(this.geojsons[i]);
+            // if (event) {
+              //hide the geojson
+              let newArray = [];
+              for (let i = 0; i < this.geojsons.length; i++) {
+                if (this.geojsons[i].id !== glid) {
+                  newArray.push(this.geojsons[i]);
+                }
               }
-            }
-            this.geoJsonStatusLookup[glid].visible = false;
-            this.geojsons = newArray;
+              this.geoJsonStatusLookup[glid].visible = false;
+              this.geojsons = newArray;
+            // }
           }
           return;
+        } else {
+          this.geoJsonStatusLookup[glid] = { loading: true };
         }
         let geotable = this.locationsLookup[glid].geotable;
         let geoid = this.locationsLookup[glid].geoid;
@@ -391,7 +401,7 @@
                 bbox: data.bbox,
               };
               me.geojsons.push(geojsonObj);
-              me.geoJsonStatusLookup[glid] = { loaded: true, visible: true, geojsonObj: geojsonObj };
+              me.geoJsonStatusLookup[glid] = { loading: false, loaded: true, visible: true, geojsonObj: geojsonObj };
             });
           })
           .catch(function(err) {
