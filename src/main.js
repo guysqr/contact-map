@@ -9,10 +9,17 @@ import { LMap, LTileLayer, LMarker } from "vue2-leaflet";
 import "leaflet/dist/leaflet.css";
 import VueWindowSize from "vue-window-size";
 import VueMoment from 'vue-moment';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faAngleDoubleRight, faAngleDoubleLeft } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 Vue.component("l-map", LMap);
 Vue.component("l-tile-layer", LTileLayer);
 Vue.component("l-marker", LMarker);
+Vue.component('font-awesome-icon', FontAwesomeIcon);
+
+library.add(faAngleDoubleRight);
+library.add(faAngleDoubleLeft);
 
 Amplify.configure(aws_exports);
 Vue.use(AmplifyPlugin, AmplifyModules, VueWindowSize, VueMoment);
