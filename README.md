@@ -1,16 +1,13 @@
 # Contact Map
 
 ## About
-The goal of Contact Map is to provide two things:
+Contact Map allows users to anonymously upload their own location data (or enter it manually), then display it on the map keyed by the times for which COVID-19 data is available. A "step-through" feature allows the user to see the data change over time and how their locations appear in relation to those changes.
 
-1. An Open API for COVID-19 data for Australia that provides a standard way to get data by date with the best precision that has been made available by the various authorities. Included will be an API for also getting location information, eg centroids and polygons of the areas to which the data relates.
-2. A way for users to compare their own locations over time with the prevalence of COVID-19 cases in the same areas.
+You can also use Contact Map to review changes to COVID-19 statistics by location over time
 
-The first part will be delivered via an Open API providing access to the data that is being collected for use by this app.
+As part of this work an Open API for COVID-19 data for Australia was developed provides a standard way to get data by date with the best precision that has been made available by the various authorities. There are also APIs for getting location information, eg bounding boxes and polygons of the areas to which the data relates.
 
-The second will be delivered by allowing users to anonymously upload their own location data (or enter it manually), then displaying it on the map keyed by the times for which COVID-19 data is available. A "play" feature will allow the user to see the data change over time and how their locations appear in relation to those changes.
-
-An extension to this idea would 
+This project is built using AWS Amplify. To run this application locally you will need to clone this repo and configure your local environment as per the guide here https://docs.amplify.aws/start/q/integration/vue
 
 ## Project setup
 ```
@@ -20,6 +17,10 @@ yarn install
 ### Compiles and hot-reloads for development
 ```
 yarn serve
+```
+or
+```
+amplify serve
 ```
 
 ### Compiles and minifies for production
@@ -32,9 +33,9 @@ yarn build
 yarn lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Contributing
 
-## Data objects
+You are welcome to contribute to this project. In particular, supporting additional location data formats would be nice.
+
 
 
