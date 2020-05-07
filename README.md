@@ -2,9 +2,9 @@
 
 ## About
 
-Contact Map allows users to anonymously upload their own location data (or enter it manually), then display it on the map keyed by the times for which COVID-19 data is available. A "step-through" feature allows the user to see the data change over time and how their locations appear in relation to those changes.
+Contact Map allows users to anonymously upload their Google Takeout Semantic Location History json files, then display the data on the map, correlated to the times and locations for which COVID-19 data is available. A "step-through" feature allows the user to see the data change over time and how their locations appear in relation to those changes.
 
-You can also use Contact Map to review changes to COVID-19 statistics by location over time.
+Using Contact Map you can see how many cases had been recorded in the places you've been, at the time you were there. If you don't have Google location data, you can still use Contact Map to review changes to COVID-19 statistics by location over time.
 
 This project is built using AWS Amplify. To run this application locally you will need to clone this repo and configure your local environment as per the guide here https://docs.amplify.aws/start/q/integration/vue
 
