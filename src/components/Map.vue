@@ -212,7 +212,7 @@ export default {
         // Important part Here
         provider: new OpenStreetMapProvider(),
       },
-      geoJsonPopup: {},
+      geoJsonPopup: L.popup({ closeButton: false }),
       glidWithPopup: null,
     };
   },
@@ -340,7 +340,7 @@ export default {
       if (this.geoJsonPopup && this.glidWithPopup && Object.prototype.hasOwnProperty.call(this.caseDataLookup, this.glidWithPopup)) {
         this.geoJsonPopup.setContent(this.caseDataLookup[this.glidWithPopup].content);
       }
-      else {
+      else if (this.geoJsonPopup) {
         this.geoJsonPopup.remove();
         this.glidWithPopup = null;
       }
@@ -385,6 +385,7 @@ export default {
           return;
         }
         if (!this.geoJsonStatusLookup[glid].visible) {
+          console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
           this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
           this.geoJsonStatusLookup[glid].visible = true;
         } else {
@@ -393,15 +394,18 @@ export default {
           let newArray = [];
           for (let i = 0; i < this.geojsons.length; i++) {
             if (this.geojsons[i].id !== glid) {
+              console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
               newArray.push(this.geojsons[i]);
             }
           }
           this.geoJsonStatusLookup[glid].visible = false;
+          console.log("setting geojsons to "+JSON.stringify(newArray));
           this.geojsons = newArray;
           // }
         }
         return;
-      } else {
+      } 
+      else {
         this.geoJsonStatusLookup[glid] = { loading: true };
       }
       let geotable = this.locationsLookup[glid].geotable;
@@ -448,7 +452,8 @@ export default {
       let newArray = [];
       //if this has been hidden during a previous update, add it back to test it again
       for (let glid in this.geoJsonStatusLookup) {
-        if (!this.geoJsonStatusLookup[glid].visible) {
+        if (!this.geoJsonStatusLookup[glid].loading && !this.geoJsonStatusLookup[glid].visible && Object.prototype.hasOwnProperty.call(this.geoJsonStatusLookup[glid], 'geojsonObj')) {
+          console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
           this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
           this.geoJsonStatusLookup[glid].visible = true;
         }
@@ -463,6 +468,7 @@ export default {
             value = this.caseDataLookup[glid].value;
             colour = value > 39 ? this.dataColorLookup[39] : this.dataColorLookup[value];
           }
+          console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
           newArray.push({
             geojson: this.geojsons[i].geojson,
             id: this.geojsons[i].id,
@@ -478,6 +484,7 @@ export default {
           // newArray.push(this.geojsons[i]);
         }
       }
+      console.log("setting geojsons to "+JSON.stringify(newArray));
       this.geojsons = newArray;
       this.refreshGeojsonPopup();
     },
