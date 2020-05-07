@@ -12,7 +12,7 @@
     </div>
     <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" @click="showDataUnderClick" ref="map" style="width:100%; height: 100vh; z-index: 100">
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showGeojsonPopup(g)" @mouseout="hidePopupGeojson" :geojson="g.geojson" @click="hidePolygon" :options="g.style"></l-geo-json>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :options="g.style"></l-geo-json>
 
       <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPostcodeArray" :max="10" :radius="10" :blur="15" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
       <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPlaceArray" :max="10" :radius="10" :blur="15" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap"></LeafletHeatmap>
@@ -227,7 +227,7 @@ export default {
   methods: {
     setViewOption(obj) {
       this.selectedView.value = obj.value;
-      console.log(obj);
+      //console.log(obj);
       if (this.selectedView.value === "heat") {
         this.showHeatmap = true;
         this.showMarkers = false;
@@ -237,14 +237,14 @@ export default {
       }
     },
     handleData(file, response) {
-      console.log(response);
+      //console.log(response);
       this.$refs.dropzone.removeFile(file);
       let dataDates = [];
       let setMapBounds = latLngBounds();
       let userTracks = [];
       let userLocs = [];
       for (var date in response) {
-        console.log(date);
+        //console.log(date);
         dataDates.push(date);
         for (var i = 0; i < response[date].length; i++) {
           response[date][i].style = {
@@ -286,9 +286,6 @@ export default {
         }
       }
     },
-    showDataPolygon(obj) {
-      console.log(obj);
-    },
     hideAllLayers() {
       if (this.showHeatmap) {
         this.$refs.map.mapObject.removeLayer(this.$refs.heatmap.mapObject);
@@ -302,8 +299,8 @@ export default {
       }
     },
     setMapLocation(obj) {
-      console.log("calling set Map location");
-      console.log(obj);
+      //console.log("calling set Map location");
+      //console.log(obj);
       if (obj && Object.prototype.hasOwnProperty.call(obj, "bbox")) {
         let me = this;
         this.hideAllLayers();
@@ -321,15 +318,15 @@ export default {
       this.mapCentre = center;
     },
     showPopup(obj) {
-      console.log(obj);
+      //console.log(obj);
       obj.target.openPopup();
     },
-    hidePopupGeojson() {},
-    hidePolygon(event) {
-      console.log(event);
-    },
+    // hidePopupGeojson() {},
+    // hidePolygon(event) {
+    //   //console.log(event);
+    // },
     showGeojsonPopup(geojson) {
-      console.log(geojson);
+      //console.log(geojson);
       this.glidWithPopup = geojson.id;
       this.geoJsonPopup = L.popup({ closeButton: false })
         .setLatLng(geojson.latlng)
@@ -349,8 +346,8 @@ export default {
       this.showDataUnderClick({ latlng: latLng(ll) });
     },
     showDataUnderClick(obj) {
-      console.log("showDataUnderClick");
-      console.log(obj);
+      //console.log("showDataUnderClick");
+      //console.log(obj);
       if (Object.prototype.hasOwnProperty.call(obj, "originalEvent")) {
         obj.originalEvent.stopPropagation();
       }
@@ -358,7 +355,7 @@ export default {
       fetch("https://api.contactmap.me/glid_for_latlng/" + obj.latlng.lat + "/" + obj.latlng.lng)
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           response.json().then(function(data) {
@@ -373,19 +370,19 @@ export default {
       if (event) {
         event.originalEvent.stopPropagation();
       }
-      console.log("Getting polygon " + obj.glid);
-      console.log(obj);
+      //console.log("Getting polygon " + obj.glid);
+      //console.log(obj);
       var me = this;
-      console.log(me.caseDataLookup);
+      //console.log(me.caseDataLookup);
       let glid = obj.glid;
       if (Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, glid)) {
-        console.log("already loaded polygon for " + obj.glid);
+        //console.log("already loaded polygon for " + obj.glid);
         if (this.geoJsonStatusLookup[glid].loading) {
-          console.log("already loading " + glid);
+          //console.log("already loading " + glid);
           return;
         }
         if (!this.geoJsonStatusLookup[glid].visible) {
-          console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
+          //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
           this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
           this.geoJsonStatusLookup[glid].visible = true;
         } else {
@@ -394,12 +391,12 @@ export default {
           let newArray = [];
           for (let i = 0; i < this.geojsons.length; i++) {
             if (this.geojsons[i].id !== glid) {
-              console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
+              //console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
               newArray.push(this.geojsons[i]);
             }
           }
           this.geoJsonStatusLookup[glid].visible = false;
-          console.log("setting geojsons to "+JSON.stringify(newArray));
+          //console.log("setting geojsons to "+JSON.stringify(newArray));
           this.geojsons = newArray;
           // }
         }
@@ -413,7 +410,7 @@ export default {
       fetch("https://api.contactmap.me/geometry/" + geotable + "/" + geoid)
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           response.json().then(function(data) {
@@ -427,8 +424,8 @@ export default {
               content = me.caseDataLookup[glid].content;
               latlng = me.caseDataLookup[glid].latlng;
             } else {
-              console.log("tried to load polygon for " + glid + " but caseDataLookup didn't have a matching record");
-              console.log(me.caseDataLookup);
+              //console.log("tried to load polygon for " + glid + " but caseDataLookup didn't have a matching record");
+              //console.log(me.caseDataLookup);
             }
             let geojsonObj = {
               geojson: data.polygon,
@@ -448,12 +445,12 @@ export default {
         });
     },
     updatePolygons() {
-      console.log("running updatePolygons");
+      //console.log("running updatePolygons");
       let newArray = [];
       //if this has been hidden during a previous update, add it back to test it again
       for (let glid in this.geoJsonStatusLookup) {
         if (!this.geoJsonStatusLookup[glid].loading && !this.geoJsonStatusLookup[glid].visible && Object.prototype.hasOwnProperty.call(this.geoJsonStatusLookup[glid], 'geojsonObj')) {
-          console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
+          //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
           this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
           this.geoJsonStatusLookup[glid].visible = true;
         }
@@ -461,14 +458,14 @@ export default {
       for (let i = 0; i < this.geojsons.length; i++) {
         let glid = this.geojsons[i].id;
         if (Object.prototype.hasOwnProperty.call(this.caseDataLookup, glid)) {
-          console.log("updating polygon " + glid + ": " + this.caseDataLookup[glid].value);
+          //console.log("updating polygon " + glid + ": " + this.caseDataLookup[glid].value);
           let colour = "#fffffff";
           let value = 0;
           if (Object.prototype.hasOwnProperty.call(this.caseDataLookup[glid], "value")) {
             value = this.caseDataLookup[glid].value;
             colour = value > 39 ? this.dataColorLookup[39] : this.dataColorLookup[value];
           }
-          console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
+          //console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
           newArray.push({
             geojson: this.geojsons[i].geojson,
             id: this.geojsons[i].id,
@@ -479,12 +476,12 @@ export default {
             bbox: this.geojsons[i].bbox,
           });
         } else {
-          console.log("couldn't update polygon " + glid);
+          //console.log("couldn't update polygon " + glid);
           this.geoJsonStatusLookup[glid].visible = false;
           // newArray.push(this.geojsons[i]);
         }
       }
-      console.log("setting geojsons to "+JSON.stringify(newArray));
+      //console.log("setting geojsons to "+JSON.stringify(newArray));
       this.geojsons = newArray;
       this.refreshGeojsonPopup();
     },
@@ -498,12 +495,12 @@ export default {
       fetch("https://api.contactmap.me/geolocations")
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           response.json().then(function(data) {
             me.locationsLookup = data;
-            console.log(me.locationsLookup);
+            //console.log(me.locationsLookup);
             let locArray = [];
             for (var key in data) {
               //console.log(key);
@@ -520,7 +517,7 @@ export default {
               });
             }
             me.locationsArray = me.filteredLocationsArray = locArray;
-            console.log(locArray);
+            //console.log(locArray);
             // me.getPlaceData();
             me.getPlaceData();
             // me.getPostcodeData();
@@ -538,7 +535,7 @@ export default {
           locArray.push(this.locationsArray[i]);
         }
       }
-      console.log(locArray);
+      //console.log(locArray);
       this.filteredLocationsArray = locArray;
     },
     getDates() {
@@ -546,7 +543,7 @@ export default {
       fetch("https://api.contactmap.me/dates")
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           response.json().then(function(data) {
@@ -558,7 +555,7 @@ export default {
         });
     },
     nextDate() {
-      console.log("next");
+      //console.log("next");
       if (this.selectedDate.value === "latest") {
         return;
       }
@@ -569,7 +566,7 @@ export default {
       }
     },
     prevDate() {
-      console.log("prev");
+      //console.log("prev");
       var curPos = this.datesArray.indexOf(this.selectedDate);
       if (this.selectedDate.value === "latest") {
         this.selectedDate = this.datesArray[1];
@@ -584,7 +581,7 @@ export default {
       fetch("https://api.contactmap.me/states")
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           response.json().then(function(data) {
@@ -606,12 +603,12 @@ export default {
     },
     setDate(obj) {
       this.selectedDate = obj;
-      console.log(this.selectedDate);
+      //console.log(this.selectedDate);
       document.dispatchEvent(new Event("DATE_CHANGED"));
       this.getPlaceData();
     },
     setState(obj) {
-      console.log(obj);
+      //console.log(obj);
       this.selectedState = obj;
       this.latLngPlaceArray = [];
       this.casePlaceArray = [];
@@ -630,11 +627,11 @@ export default {
     getPlaceData() {
       var me = this;
       var layerView = this.showHeatmap ? "heatmap" : "markers";
-      console.log("getting data");
+      //console.log("getting data");
       fetch("https://api.contactmap.me/by_place/" + this.selectedState.value.name + "/" + this.selectedDate.value)
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           me.showHeatmap = false;
@@ -685,17 +682,17 @@ export default {
     getPostcodeData() {
       var me = this;
       var layerView = this.showHeatmap ? "heatmap" : "markers";
-      console.log("getting data");
+      //console.log("getting data");
       fetch("https://api.contactmap.me/by_postcode/" + this.selectedState.value.name + "/" + this.selectedDate.value)
         .then(function(response) {
           if (response.status !== 200) {
-            console.log("Looks like there was a problem. Status Code: " + response.status);
+            //console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
           me.showHeatmap = false;
           me.showMarkers = false;
           response.json().then(function(data) {
-            console.log(data);
+            //console.log(data);
             let latLngArray = [];
             let caseArray = [];
             let caseLookup = me.caseDataLookup;
@@ -729,9 +726,9 @@ export default {
             me.caseDataLookup = caseLookup;
             me.latLngPostcodeArray = latLngArray;
             me.casePostcodeArray = caseArray;
-            console.log(me.latLngPostcodeArray);
-            console.log(me.casePostcodeArray);
-            console.log(me.caseDataLookup);
+            //console.log(me.latLngPostcodeArray);
+            //console.log(me.casePostcodeArray);
+            //console.log(me.caseDataLookup);
             me.showHeatmap = layerView === "heatmap";
             me.showMarkers = layerView === "markers";
             document.dispatchEvent(new Event("POSTCODE_DATA_LOADED"));
@@ -745,7 +742,7 @@ export default {
   created() {
     //do we support geolocation
     if (!("geolocation" in navigator)) {
-      console.log("Geolocation is not available.");
+      //console.log("Geolocation is not available.");
       return;
     }
     this.gettingLocation = true;
@@ -773,24 +770,24 @@ export default {
     for (let i = 0; i < 20; i++) {
       this.dataColorLookup.push(rgbToHex(255, 0, 255 - Math.ceil((255 / 20) * i)));
     }
-    console.log(this.dataColorLookup);
+    //console.log(this.dataColorLookup);
     document.addEventListener("PLACE_DATA_LOADED", {
       handleEvent: function(event) {
-        console.log("PLACE_DATA_LOADED!");
+        //console.log("PLACE_DATA_LOADED!");
         console.log(event);
         me.getPostcodeData();
       },
     });
     document.addEventListener("POSTCODE_DATA_LOADED", {
       handleEvent: function(event) {
-        console.log("POSTCODE_DATA_LOADED!");
+        //console.log("POSTCODE_DATA_LOADED!");
         console.log(event);
         me.updatePolygons();
       },
     });
     document.addEventListener("DATE_CHANGED", {
       handleEvent: function(event) {
-        console.log("DATE_CHANGED!");
+        //console.log("DATE_CHANGED!");
         console.log(event);
         me.filteredLocData = [];
         me.filteredTrackData = [];
