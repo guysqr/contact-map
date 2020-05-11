@@ -134,11 +134,11 @@ export default {
         1.0: "red",
       },
       dropzoneOptions: {
-        url: "https://api.contactmap.me/upload",
+        url: "https://api-prod.contactmap.me/upload",
         thumbnailWidth: 100,
         maxFilesize: 2,
         addRemoveLinks: true,
-        headers: { "My-Awesome-Header": "header value" },
+        // headers: { "My-Awesome-Header": "header value" },
         dictDefaultMessage: "Drop Google<br>Takeout JSON<br>file here...",
       },
       dataColorLookup: [],
@@ -169,7 +169,7 @@ export default {
       datesArray: [],
       statesArray: [],
       selectedDate: { label: "Latest", value: "latest" },
-      location: null,
+      usersLocation: null,
       gettingLocation: false,
       lgaPolygons: {},
       activePolygon: { color: "blue", latLngs: [] },
@@ -263,7 +263,7 @@ export default {
           } else {
             userLocs.push(response[date][i]);
             setMapBounds.extend(response[date][i].points[0]);
-            this.showDataByLatLng(response[date][i].points[0]);
+            this.showDataByLatLng(latLng(response[date][i].points[0]));
           }
         }
       }
@@ -299,8 +299,6 @@ export default {
       }
     },
     setMapLocation(obj) {
-      //console.log("calling set Map location");
-      //console.log(obj);
       if (obj && Object.prototype.hasOwnProperty.call(obj, "bbox")) {
         let me = this;
         this.hideAllLayers();
@@ -336,14 +334,13 @@ export default {
     refreshGeojsonPopup() {
       if (this.geoJsonPopup && this.glidWithPopup && Object.prototype.hasOwnProperty.call(this.caseDataLookup, this.glidWithPopup)) {
         this.geoJsonPopup.setContent(this.caseDataLookup[this.glidWithPopup].content);
-      }
-      else if (this.geoJsonPopup) {
+      } else if (this.geoJsonPopup) {
         this.geoJsonPopup.remove();
         this.glidWithPopup = null;
       }
     },
-    showDataByLatLng(ll) {
-      this.showDataUnderClick({ latlng: latLng(ll) });
+    showDataByLatLng(latlng) {
+      this.showDataUnderClick({ latlng: latlng });
     },
     showDataUnderClick(obj) {
       //console.log("showDataUnderClick");
@@ -401,8 +398,7 @@ export default {
           // }
         }
         return;
-      } 
-      else {
+      } else {
         this.geoJsonStatusLookup[glid] = { loading: true };
       }
       let geotable = this.locationsLookup[glid].geotable;
@@ -449,7 +445,7 @@ export default {
       let newArray = [];
       //if this has been hidden during a previous update, add it back to test it again
       for (let glid in this.geoJsonStatusLookup) {
-        if (!this.geoJsonStatusLookup[glid].loading && !this.geoJsonStatusLookup[glid].visible && Object.prototype.hasOwnProperty.call(this.geoJsonStatusLookup[glid], 'geojsonObj')) {
+        if (!this.geoJsonStatusLookup[glid].loading && !this.geoJsonStatusLookup[glid].visible && Object.prototype.hasOwnProperty.call(this.geoJsonStatusLookup[glid], "geojsonObj")) {
           //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
           this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
           this.geoJsonStatusLookup[glid].visible = true;
@@ -749,8 +745,9 @@ export default {
     // get position
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        console.log(pos);
         this.gettingLocation = false;
-        this.location = pos;
+        this.usersLocation = latLng(pos.coords.latitude, pos.coords.longitude);
       },
       (err) => {
         this.gettingLocation = false;

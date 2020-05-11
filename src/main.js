@@ -12,6 +12,16 @@ import VueMoment from 'vue-moment';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faAngleDoubleRight, faAngleDoubleLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import L from 'leaflet';
+require('leaflet/dist/leaflet.css');
+
+// FIX leaflet's default icon path problems with webpack
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png')
+});
 
 Vue.component("l-map", LMap);
 Vue.component("l-tile-layer", LTileLayer);
