@@ -16,12 +16,12 @@
 
       <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPostcodeArray" :max="10" :radius="10" :blur="15" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
       <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPlaceArray" :max="10" :radius="10" :blur="15" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap"></LeafletHeatmap>
-      <div v-if="showMarkers" ref="markerLayer">
-        <l-marker v-for="c in casePlaceArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'place-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
+      <div>
+        <l-marker ref="markersPlace" v-for="c in filteredCasePlaceArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'place-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
           <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
         </l-marker>
-        <l-marker v-for="c in casePostcodeArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'postcode-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
+        <l-marker ref="markersPostcode" v-for="c in filteredCasePostcodeArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'postcode-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
           <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
         </l-marker>
@@ -104,7 +104,7 @@ export default {
     var maxMapBounds = latLngBounds(corner1, corner2);
     var startingMapCentre = maxMapBounds.getCenter();
     return {
-      showMarkers: false,
+      showMarkers: true,
       showHeatmap: true,
       //keeps track of currently loaded case data
       caseDataLookup: {},
@@ -134,11 +134,10 @@ export default {
         1.0: "red",
       },
       dropzoneOptions: {
-        url: "https://api-prod.contactmap.me/upload",
+        url: "https://api.contactmap.me/upload",
         thumbnailWidth: 100,
         maxFilesize: 2,
         addRemoveLinks: true,
-        // headers: { "My-Awesome-Header": "header value" },
         dictDefaultMessage: "Drop Google<br>Takeout JSON<br>file here...",
       },
       dataColorLookup: [],
@@ -149,8 +148,10 @@ export default {
       maxValue: 100,
       latLngPlaceArray: [],
       casePlaceArray: [],
+      filteredCasePlaceArray: [],
       latLngPostcodeArray: [],
       casePostcodeArray: [],
+      filteredCasePostcodeArray: [],
       locationsLookup: {},
       locationsArray: [],
       filteredLocationsArray: [],
@@ -286,31 +287,48 @@ export default {
         }
       }
     },
-    hideAllLayers() {
+    hideHeatmapLayers() {
       if (this.showHeatmap) {
         this.$refs.map.mapObject.removeLayer(this.$refs.heatmap.mapObject);
         this.$refs.map.mapObject.removeLayer(this.$refs.heatmap_postcodes.mapObject);
       }
     },
-    showAllLayers() {
+    showHeatmapLayers() {
       if (this.showHeatmap) {
         this.$refs.map.mapObject.addLayer(this.$refs.heatmap.mapObject);
         this.$refs.map.mapObject.addLayer(this.$refs.heatmap_postcodes.mapObject);
       }
     },
+    hideMarkerLayer() {
+      this.showMarkers = false;
+      this.filteredCasePlaceArray = [];
+      this.filteredCasePostcodeArray = [];
+    },
+    showMarkerLayer() {
+      this.showMarkers = false;
+    },
     setMapLocation(obj) {
       if (obj && Object.prototype.hasOwnProperty.call(obj, "bbox")) {
         let me = this;
-        this.hideAllLayers();
+        this.hideHeatmapLayers();
         this.$refs.map.mapObject.on("moveend", function() {
-          me.showAllLayers();
+          me.showHeatmapLayers();
         });
         this.showPolygon(obj);
         this.$refs.map.mapObject.fitBounds([obj.bbox]);
       }
     },
     zoomUpdate(zoom) {
+      console.log(zoom);
       this.mapZoom = zoom;
+      this.filterLocations();
+      if (zoom > 10) {
+        this.hideHeatmapLayers();
+        this.showMarkerLayer();
+      } else {
+        this.showHeatmapLayers();
+        this.hideMarkerLayer();
+      }
     },
     centerUpdate(center) {
       this.mapCentre = center;
@@ -356,7 +374,21 @@ export default {
             return;
           }
           response.json().then(function(data) {
-            me.showPolygon(me.locationsLookup[data.glid]);
+            if (data.error) {
+              console.log(data.error);
+              return;
+            }
+            var chosenGlid = data.glids[0];
+            if (data.glids.length > 1) {
+              for (var i = 0; i < data.glids.length; i++) {
+                if (Object.prototype.hasOwnProperty.call(me.caseDataLookup, data.glids[i])) {
+                  if (!Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, data.glids[i])) {
+                    chosenGlid = data.glids[i];
+                  }
+                }
+              }
+            }
+            me.showPolygon(me.locationsLookup[chosenGlid]);
           });
         })
         .catch(function(err) {
@@ -527,12 +559,31 @@ export default {
       let locArray = [];
       for (var i = 0; i < this.locationsArray.length; i++) {
         // console.log(this.locationsArray[i]);
-        if (this.selectedState.label === "Australia" || this.locationsArray[i].state === this.selectedState.label) {
+        // if (this.selectedState.label === "Australia" || this.locationsArray[i].state === this.selectedState.label) {
+        if (this.$refs.map.mapObject.getBounds().contains(this.locationsArray[i].latlng)) {
           locArray.push(this.locationsArray[i]);
         }
       }
       //console.log(locArray);
       this.filteredLocationsArray = locArray;
+      let placeArray = [];
+      for (i = 0; i < this.casePlaceArray.length; i++) {
+        // console.log(this.locationsArray[i]);
+        if (this.$refs.map.mapObject.getBounds().contains(this.casePlaceArray[i].latlng)) {
+          placeArray.push(this.casePlaceArray[i]);
+        }
+      }
+      //console.log(locArray);
+      this.filteredCasePlaceArray = placeArray;
+      let postcodeArray = [];
+      for (i = 0; i < this.casePostcodeArray.length; i++) {
+        // console.log(this.locationsArray[i]);
+        if (this.$refs.map.mapObject.getBounds().contains(this.casePostcodeArray[i].latlng)) {
+          postcodeArray.push(this.casePostcodeArray[i]);
+        }
+      }
+      //console.log(locArray);
+      this.filteredCasePostcodeArray = postcodeArray;
     },
     getDates() {
       var me = this;
@@ -756,8 +807,11 @@ export default {
     );
   },
   mounted() {
-    this.setMapHeight();
     var me = this;
+    this.$refs.map.mapObject.on("load", function() {
+      me.setMapHeight();
+      me.zoomUpdate(me.mapZoom);
+    });
     window.addEventListener("resize", function() {
       me.setMapHeight();
     });
