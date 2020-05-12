@@ -93,6 +93,12 @@
       this.parentContainer.removeLayer(this);
     },
     methods: {
+      redraw() {
+        this.mapObject.redraw();
+      },
+      reset() {
+        this.mapObject._reset();
+      },
       setMinOpacity(newVal) {
         this.mapObject.setOptions({ minOpacity: newVal });
       },
@@ -115,6 +121,12 @@
         } else {
           this.parentContainer.removeLayer(this);
         }
+      },
+      hide() {
+        this.parentContainer.removeLayer(this);
+      },
+      show() {
+        this.parentContainer.addLayer(this);
       },
       addLatLng(value) {
         this.mapObject.addLatLng(value);
