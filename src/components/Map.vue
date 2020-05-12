@@ -1,21 +1,21 @@
 <template>
   <div class="map-panel">
     <div id="ControlPanel" class="control-panel">
-      <div class="control-panel-label">State:</div>
-      <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select>
+      <!-- <div class="control-panel-label">State:</div>
+      <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select> -->
       <div class="control-panel-label">Date:</div>
       <dynamic-select :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 15em"></dynamic-select>
       <div class="control-panel-label">Area:</div>
-      <dynamic-select :options="filteredLocationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>
-      <div class="control-panel-label">View:</div>
-      <dynamic-select :options="viewOptions" v-model="selectedView" @input="setViewOption" option-value="value" option-text="label" style="width: 10em"></dynamic-select>
+      <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>
+      <!-- <div class="control-panel-label">View:</div>
+      <dynamic-select :options="viewOptions" v-model="selectedView" @input="setViewOption" option-value="value" option-text="label" style="width: 10em"></dynamic-select> -->
     </div>
     <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" @click="showDataUnderClick" ref="map" style="width:100%; height: 100vh; z-index: 100">
       <l-tile-layer :url="url" :attribution="attribution" />
       <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :options="g.style"></l-geo-json>
 
-      <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPostcodeArray" :max="10" :radius="10" :blur="15" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
-      <LeafletHeatmap v-if="showHeatmap" :lat-lng="latLngPlaceArray" :max="10" :radius="10" :blur="15" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap"></LeafletHeatmap>
+      <LeafletHeatmap v-if="filteredLatLngPostcodeArray.length > 0" :lat-lng="filteredLatLngPostcodeArray" :max="10" :radius="10" :blur="15" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
+      <LeafletHeatmap v-if="filteredLatLngPlaceArray.length > 0" :lat-lng="filteredLatLngPlaceArray" :max="10" :radius="10" :blur="15" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap"></LeafletHeatmap>
       <div>
         <l-marker ref="markersPlace" v-for="c in filteredCasePlaceArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'place-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
@@ -147,9 +147,11 @@ export default {
       filteredLocData: [],
       maxValue: 100,
       latLngPlaceArray: [],
+      filteredLatLngPlaceArray: [],
       casePlaceArray: [],
       filteredCasePlaceArray: [],
       latLngPostcodeArray: [],
+      filteredLatLngPostcodeArray: [],
       casePostcodeArray: [],
       filteredCasePostcodeArray: [],
       locationsLookup: {},
@@ -169,6 +171,7 @@ export default {
       },
       datesArray: [],
       statesArray: [],
+      lastMapClickLoc: null,
       selectedDate: { label: "Latest", value: "latest" },
       usersLocation: null,
       gettingLocation: false,
@@ -288,61 +291,58 @@ export default {
       }
     },
     hideHeatmapLayers() {
+      console.log("hiding heatmap");
       if (this.showHeatmap) {
-        this.$refs.map.mapObject.removeLayer(this.$refs.heatmap.mapObject);
-        this.$refs.map.mapObject.removeLayer(this.$refs.heatmap_postcodes.mapObject);
+        this.filteredLatLngPlaceArray = [];
+        this.filteredLatLngPostcodeArray = [];
+        this.showHeatmap = false;
       }
     },
     showHeatmapLayers() {
-      if (this.showHeatmap) {
-        this.$refs.map.mapObject.addLayer(this.$refs.heatmap.mapObject);
-        this.$refs.map.mapObject.addLayer(this.$refs.heatmap_postcodes.mapObject);
+      if (!this.showHeatmap) {
+        console.log("showing heatmap");
+        this.showHeatmap = true;
+        this.filterLocations();
       }
     },
     hideMarkerLayer() {
+      console.log("hiding markers");
       this.showMarkers = false;
       this.filteredCasePlaceArray = [];
       this.filteredCasePostcodeArray = [];
     },
     showMarkerLayer() {
-      this.showMarkers = false;
+      console.log("showing markers");
+      this.showMarkers = true;
     },
     setMapLocation(obj) {
       if (obj && Object.prototype.hasOwnProperty.call(obj, "bbox")) {
-        let me = this;
-        this.hideHeatmapLayers();
-        this.$refs.map.mapObject.on("moveend", function() {
-          me.showHeatmapLayers();
-        });
         this.showPolygon(obj);
         this.$refs.map.mapObject.fitBounds([obj.bbox]);
       }
     },
     zoomUpdate(zoom) {
       console.log(zoom);
-      this.mapZoom = zoom;
-      this.filterLocations();
-      if (zoom > 10) {
-        this.hideHeatmapLayers();
-        this.showMarkerLayer();
-      } else {
-        this.showHeatmapLayers();
-        this.hideMarkerLayer();
+      if (this.mapZoom !== zoom) {
+        this.mapZoom = zoom;
+        this.filterLocations();
+        if (zoom > 10) {
+          this.hideHeatmapLayers();
+          this.showMarkerLayer();
+        } else {
+          this.showHeatmapLayers();
+          this.hideMarkerLayer();
+        }
       }
     },
     centerUpdate(center) {
       this.mapCentre = center;
+      this.filterLocations();
     },
     showPopup(obj) {
-      //console.log(obj);
       obj.target.openPopup();
     },
-    // hidePopupGeojson() {},
-    // hidePolygon(event) {
-    //   //console.log(event);
-    // },
     showGeojsonPopup(geojson) {
-      //console.log(geojson);
       this.glidWithPopup = geojson.id;
       this.geoJsonPopup = L.popup({ closeButton: false })
         .setLatLng(geojson.latlng)
@@ -361,39 +361,42 @@ export default {
       this.showDataUnderClick({ latlng: latlng });
     },
     showDataUnderClick(obj) {
-      //console.log("showDataUnderClick");
-      //console.log(obj);
       if (Object.prototype.hasOwnProperty.call(obj, "originalEvent")) {
         obj.originalEvent.stopPropagation();
       }
       var me = this;
-      fetch("https://api.contactmap.me/glid_for_latlng/" + obj.latlng.lat + "/" + obj.latlng.lng)
-        .then(function(response) {
-          if (response.status !== 200) {
-            //console.log("Looks like there was a problem. Status Code: " + response.status);
-            return;
-          }
-          response.json().then(function(data) {
-            if (data.error) {
-              console.log(data.error);
+      if (this.lastMapClickLoc !== obj.latlng.lat + "/" + obj.latlng.lng) {
+        this.lastMapClickLoc = obj.latlng.lat + "/" + obj.latlng.lng;
+        fetch("https://api.contactmap.me/glid_for_latlng/" + obj.latlng.lat + "/" + obj.latlng.lng)
+          .then(function(response) {
+            if (response.status !== 200) {
+              console.log("Looks like there was a problem. Status Code: " + response.status);
               return;
             }
-            var chosenGlid = data.glids[0];
-            if (data.glids.length > 1) {
-              for (var i = 0; i < data.glids.length; i++) {
-                if (Object.prototype.hasOwnProperty.call(me.caseDataLookup, data.glids[i])) {
-                  if (!Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, data.glids[i])) {
-                    chosenGlid = data.glids[i];
+            response.json().then(function(data) {
+              if (data.error) {
+                console.log(data.error);
+                return;
+              }
+              var chosenGlid = data.glids[0];
+              if (data.glids.length > 1) {
+                for (var i = 0; i < data.glids.length; i++) {
+                  if (Object.prototype.hasOwnProperty.call(me.caseDataLookup, data.glids[i])) {
+                    if (!Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, data.glids[i])) {
+                      chosenGlid = data.glids[i];
+                    }
                   }
                 }
               }
-            }
-            me.showPolygon(me.locationsLookup[chosenGlid]);
+              me.showPolygon(me.locationsLookup[chosenGlid]);
+            });
+          })
+          .catch(function(err) {
+            console.log("Fetch Error :-S", err);
           });
-        })
-        .catch(function(err) {
-          console.log("Fetch Error :-S", err);
-        });
+      } else {
+        console.log("double-click");
+      }
     },
     showPolygon(obj, event) {
       if (event) {
@@ -545,10 +548,7 @@ export default {
               });
             }
             me.locationsArray = me.filteredLocationsArray = locArray;
-            //console.log(locArray);
-            // me.getPlaceData();
             me.getPlaceData();
-            // me.getPostcodeData();
           });
         })
         .catch(function(err) {
@@ -556,34 +556,40 @@ export default {
         });
     },
     filterLocations() {
-      let locArray = [];
-      for (var i = 0; i < this.locationsArray.length; i++) {
-        // console.log(this.locationsArray[i]);
-        // if (this.selectedState.label === "Australia" || this.locationsArray[i].state === this.selectedState.label) {
-        if (this.$refs.map.mapObject.getBounds().contains(this.locationsArray[i].latlng)) {
-          locArray.push(this.locationsArray[i]);
+      var i = 0,
+        newArray = [];
+      if (this.showHeatmap) {
+        newArray = [];
+        for (i = 0; i < this.latLngPostcodeArray.length; i++) {
+          if (this.$refs.map.mapObject.getBounds().contains(latLng(this.latLngPostcodeArray[i][0], this.latLngPostcodeArray[i][1]))) {
+            newArray.push(this.latLngPostcodeArray[i]);
+          }
         }
-      }
-      //console.log(locArray);
-      this.filteredLocationsArray = locArray;
-      let placeArray = [];
-      for (i = 0; i < this.casePlaceArray.length; i++) {
-        // console.log(this.locationsArray[i]);
-        if (this.$refs.map.mapObject.getBounds().contains(this.casePlaceArray[i].latlng)) {
-          placeArray.push(this.casePlaceArray[i]);
+        this.filteredLatLngPostcodeArray = newArray;
+        newArray = [];
+        for (i = 0; i < this.latLngPlaceArray.length; i++) {
+          if (this.$refs.map.mapObject.getBounds().contains(latLng(this.latLngPlaceArray[i][0], this.latLngPlaceArray[i][1]))) {
+            newArray.push(this.latLngPlaceArray[i]);
+          }
         }
+        this.filteredLatLngPlaceArray = newArray;
       }
-      //console.log(locArray);
-      this.filteredCasePlaceArray = placeArray;
-      let postcodeArray = [];
-      for (i = 0; i < this.casePostcodeArray.length; i++) {
-        // console.log(this.locationsArray[i]);
-        if (this.$refs.map.mapObject.getBounds().contains(this.casePostcodeArray[i].latlng)) {
-          postcodeArray.push(this.casePostcodeArray[i]);
+      if (this.showMarkers) {
+        newArray = [];
+        for (i = 0; i < this.casePlaceArray.length; i++) {
+          if (this.$refs.map.mapObject.getBounds().contains(this.casePlaceArray[i].latlng)) {
+            newArray.push(this.casePlaceArray[i]);
+          }
         }
+        this.filteredCasePlaceArray = newArray;
+        newArray = [];
+        for (i = 0; i < this.casePostcodeArray.length; i++) {
+          if (this.$refs.map.mapObject.getBounds().contains(this.casePostcodeArray[i].latlng)) {
+            newArray.push(this.casePostcodeArray[i]);
+          }
+        }
+        this.filteredCasePostcodeArray = newArray;
       }
-      //console.log(locArray);
-      this.filteredCasePostcodeArray = postcodeArray;
     },
     getDates() {
       var me = this;
@@ -602,14 +608,12 @@ export default {
         });
     },
     nextDate() {
-      //console.log("next");
       if (this.selectedDate.value === "latest") {
         return;
       }
       var curPos = this.datesArray.indexOf(this.selectedDate);
       if (curPos >= 1) {
         this.selectedDate = this.datesArray[curPos - 1];
-        document.dispatchEvent(new Event("DATE_CHANGED"));
       }
     },
     prevDate() {
@@ -617,10 +621,8 @@ export default {
       var curPos = this.datesArray.indexOf(this.selectedDate);
       if (this.selectedDate.value === "latest") {
         this.selectedDate = this.datesArray[1];
-        document.dispatchEvent(new Event("DATE_CHANGED"));
       } else if (this.datesArray.length > curPos + 1) {
         this.selectedDate = this.datesArray[curPos + 1];
-        document.dispatchEvent(new Event("DATE_CHANGED"));
       }
     },
     getStates() {
@@ -650,39 +652,35 @@ export default {
     },
     setDate(obj) {
       this.selectedDate = obj;
-      //console.log(this.selectedDate);
       document.dispatchEvent(new Event("DATE_CHANGED"));
       this.getPlaceData();
     },
-    setState(obj) {
-      //console.log(obj);
-      this.selectedState = obj;
-      this.latLngPlaceArray = [];
-      this.casePlaceArray = [];
-      this.latLngPostcodeArray = [];
-      this.casePostcodeArray = [];
-      if (obj.label === "Australia") {
-        this.$refs.map.mapObject.fitBounds(this.mapBounds);
-      } else {
-        this.$refs.map.mapObject.fitBounds(obj.value.bbox);
-      }
-      // this.mapBounds = obj.value.bbox;
-      this.filterLocations();
-      this.getPlaceData();
-      // this.getPostcodeData();
-    },
+    // setState(obj) {
+    //   //console.log(obj);
+    //   this.selectedState = obj;
+    //   this.latLngPlaceArray = [];
+    //   this.casePlaceArray = [];
+    //   this.latLngPostcodeArray = [];
+    //   this.casePostcodeArray = [];
+    //   if (obj.label === "Australia") {
+    //     this.$refs.map.mapObject.fitBounds(this.mapBounds);
+    //   } else {
+    //     this.$refs.map.mapObject.fitBounds(obj.value.bbox);
+    //   }
+    //   this.getPlaceData();
+    // },
     getPlaceData() {
       var me = this;
-      var layerView = this.showHeatmap ? "heatmap" : "markers";
+      // var layerView = this.showHeatmap ? "heatmap" : "markers";
       //console.log("getting data");
       fetch("https://api.contactmap.me/by_place/" + this.selectedState.value.name + "/" + this.selectedDate.value)
         .then(function(response) {
           if (response.status !== 200) {
-            //console.log("Looks like there was a problem. Status Code: " + response.status);
+            console.log("Looks like there was a problem. Status Code: " + response.status);
             return;
           }
-          me.showHeatmap = false;
-          me.showMarkers = false;
+          // me.showHeatmap = false;
+          // me.showMarkers = false;
           response.json().then(function(data) {
             let latLngArray = [];
             let caseArray = [];
@@ -717,8 +715,8 @@ export default {
             me.latLngPlaceArray = latLngArray;
             me.caseDataLookup = caseLookup;
             me.casePlaceArray = caseArray;
-            me.showHeatmap = layerView === "heatmap";
-            me.showMarkers = layerView === "markers";
+            // me.showHeatmap = layerView === "heatmap";
+            // me.showMarkers = layerView === "markers";
             document.dispatchEvent(new Event("PLACE_DATA_LOADED"));
           });
         })
@@ -808,8 +806,8 @@ export default {
   },
   mounted() {
     var me = this;
+    this.setMapHeight();
     this.$refs.map.mapObject.on("load", function() {
-      me.setMapHeight();
       me.zoomUpdate(me.mapZoom);
     });
     window.addEventListener("resize", function() {
@@ -821,31 +819,20 @@ export default {
     for (let i = 0; i < 20; i++) {
       this.dataColorLookup.push(rgbToHex(255, 0, 255 - Math.ceil((255 / 20) * i)));
     }
-    //console.log(this.dataColorLookup);
-    document.addEventListener("PLACE_DATA_LOADED", {
-      handleEvent: function(event) {
-        //console.log("PLACE_DATA_LOADED!");
-        console.log(event);
-        me.getPostcodeData();
-      },
-    });
-    document.addEventListener("POSTCODE_DATA_LOADED", {
-      handleEvent: function(event) {
-        //console.log("POSTCODE_DATA_LOADED!");
-        console.log(event);
-        me.updatePolygons();
-      },
-    });
-    document.addEventListener("DATE_CHANGED", {
-      handleEvent: function(event) {
-        //console.log("DATE_CHANGED!");
-        console.log(event);
-        me.filteredLocData = [];
-        me.filteredTrackData = [];
-        me.filterUserTrackData();
-        me.filterUserLocData();
-      },
-    });
+    let dateChangeFunc = function() {
+      console.log(event);
+      me.filteredLocData = [];
+      me.filteredTrackData = [];
+      me.filterUserTrackData();
+      me.filterUserLocData();
+    };
+    document.removeEventListener("PLACE_DATA_LOADED", this.getPostcodeData);
+    document.removeEventListener("POSTCODE_DATA_LOADED", this.updatePolygons);
+    document.removeEventListener("DATE_CHANGED", dateChangeFunc);
+    document.addEventListener("PLACE_DATA_LOADED", this.getPostcodeData);
+    document.addEventListener("POSTCODE_DATA_LOADED", this.updatePolygons);
+    document.addEventListener("POSTCODE_DATA_LOADED", this.filterLocations);
+    document.addEventListener("DATE_CHANGED", dateChangeFunc);
     this.$nextTick(() => {
       this.getLocations();
       this.getDates();

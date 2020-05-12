@@ -80,7 +80,7 @@
       if (this.gradient) {
         options.gradient = this.gradient;
       }
-      console.log(options);
+      // console.log(options);
       this.mapObject = L.heatLayer(this.latLng, options);
       DomEvent.on(this.mapObject, this.$listeners);
       // console.log(this);
