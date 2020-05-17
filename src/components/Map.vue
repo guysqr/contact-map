@@ -7,24 +7,26 @@
       <dynamic-select :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 15em"></dynamic-select>
       <div class="control-panel-label">Area:</div>
       <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>
+      <div class="control-panel-label">Grouping:</div>
+      <dynamic-select :options="groupTypesArray" v-model="selectedGroupType" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 10em"></dynamic-select>
       <!-- <div class="control-panel-label">View:</div>
       <dynamic-select :options="viewOptions" v-model="selectedView" @input="setViewOption" option-value="value" option-text="label" style="width: 10em"></dynamic-select>-->
     </div>
     <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" @click="showDataUnderClick" ref="map" style="width:100%; height: 100vh; z-index: 100">
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :options="g.style"></l-geo-json>
-      <LeafletHeatmap v-if="showHeatmap" :lat-lng="filteredLatLngPostcodeArray" :max="10" :radius="10" :blur="15" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
-      <LeafletHeatmap v-if="showHeatmap" :lat-lng="filteredLatLngPlaceArray" :max="10" :radius="10" :blur="15" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap_places"></LeafletHeatmap>
-      <div>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style"></l-geo-json>
+      <!-- <LeafletHeatmap v-if="showHeatmap" :visible="!hideHeatmap" :lat-lng="filteredLatLngPostcodeArray" :max="10" :radius="30" :blur="60" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
+      <LeafletHeatmap v-if="showHeatmap" :visible="!hideHeatmap" :lat-lng="filteredLatLngPlaceArray" :max="10" :radius="30" :blur="60" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap_places"></LeafletHeatmap> -->
+      <!-- <div>
         <l-marker ref="markersPlace" v-for="c in filteredCasePlaceArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'place-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
-          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
+          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false, autoPan: false }"></l-popup>
         </l-marker>
         <l-marker ref="markersPostcode" v-for="c in filteredCasePostcodeArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'postcode-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
           <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
-          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false }"></l-popup>
+          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false, autoPan: false }"></l-popup>
         </l-marker>
-      </div>
+      </div> -->
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
       <l-control position="bottomleft" style="z-index: 760">
@@ -43,7 +45,7 @@
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
       <l-draw-toolbar position="topleft" />
-      <l-polyline v-for="p in filteredTrackData" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :options="{ pane: 'shadowPane', weight: 4, opacity: 0.4 }">
+      <l-polyline v-for="p in filteredTrackData" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :weight="p.style.weight" :options="{ pane: 'shadowPane' }">
         <l-tooltip :options="{ permanent: false, interactive: true }">
           <strong>Activity:</strong>
           {{ p.description }}
@@ -52,7 +54,18 @@
           {{ p.start }} to {{ p.end }}
         </l-tooltip>
       </l-polyline>
-      <l-circle v-for="p in filteredLocData" v-bind:key="p.id" :lat-lng="p.points[0]" :radius="200" :color="p.style.color" :stroke="p.style.stroke" :fillColor="p.style.color" :fillOpacity="p.style.fillOpacity" :options="{ pane: 'shadowPane' }">
+      <l-circle
+        v-for="p in filteredLocData"
+        v-bind:key="p.id"
+        :lat-lng="p.points[0]"
+        :radius="200"
+        :color="p.style.color"
+        :stroke="p.style.stroke"
+        :weight="p.style.weight"
+        :fillColor="p.style.color"
+        :fillOpacity="p.style.fillOpacity"
+        :options="{ pane: 'shadowPane' }"
+      >
         <l-tooltip :options="{ permanent: false, interactive: true }">
           <strong>Place:</strong>
           {{ p.description }}
@@ -69,10 +82,11 @@
 <script>
   import L from "leaflet";
   import { latLng, latLngBounds } from "leaflet";
-  import { LMap, LTileLayer, LMarker, LTooltip, LPopup, LControl, LControlScale, LIcon, LRectangle, LCircle, LPolyline, LGeoJson } from "vue2-leaflet";
+  // import { LMap, LTileLayer, LMarker, LTooltip, LPopup, LControl, LControlScale, LIcon, LRectangle, LCircle, LPolyline, LGeoJson } from "vue2-leaflet";
+  import { LMap, LTileLayer, LTooltip, LControl, LControlScale, LRectangle, LCircle, LPolyline, LGeoJson } from "vue2-leaflet";
 
   import DynamicSelect from "vue-dynamic-select";
-  import LeafletHeatmap from "./Vue2LeafletHeatmap";
+  // import LeafletHeatmap from "./Vue2LeafletHeatmap";
   import Vue2LeafletDrawToolbar from "vue2-leaflet-draw-toolbar";
   import { OpenStreetMapProvider } from "leaflet-geosearch";
   import VGeosearch from "vue2-leaflet-geosearch";
@@ -84,13 +98,13 @@
     components: {
       LMap,
       LTileLayer,
-      LMarker,
-      LeafletHeatmap,
+      // LMarker,
+      // LeafletHeatmap,
       LTooltip,
-      LPopup,
+      // LPopup,
       LControl,
       LControlScale,
-      LIcon,
+      // LIcon,
       LRectangle,
       LCircle,
       LPolyline,
@@ -147,6 +161,22 @@
         dataColorLookup: [],
         userTracks: [],
         userLocs: [],
+        userDataTrackStyle: {
+          "z-index": 1000,
+          color: "#666666",
+          stroke: true,
+          weight: 2,
+          fillOpacity: 0.8,
+          strokeOpacity: 0.8,
+        },
+        userDataLocStyle: {
+          "z-index": 1000,
+          color: "#666666",
+          stroke: true,
+          weight: 1,
+          fillOpacity: 0.2,
+          strokeOpacity: 0.8,
+        },
         filteredTrackData: [],
         filteredLocData: [],
         maxValue: 100,
@@ -173,6 +203,11 @@
             geom_table: "australia_polygon",
           },
         },
+        groupTypesArray: [
+          { label: "Places", value: "places" },
+          { label: "Postcodes", value: "postcodes" },
+        ],
+        selectedGroupType: { label: "Places", value: "places" },
         datesArray: [],
         statesArray: [],
         lastMapClickLoc: null,
@@ -220,7 +255,7 @@
           // Important part Here
           provider: new OpenStreetMapProvider(),
         },
-        geoJsonPopup: L.popup({ closeButton: false }),
+        geoJsonPopup: L.popup({ closeButton: false, autoPan: false }),
         glidWithPopup: null,
       };
     },
@@ -255,18 +290,13 @@
           //console.log(date);
           dataDates.push(date);
           for (var i = 0; i < response[date].length; i++) {
-            response[date][i].style = {
-              "z-index": 1000,
-              color: "#ee0000",
-              stroke: true,
-              fillOpacity: 0.5,
-            };
+            response[date][i].style = this.userDataLocStyle;
             response[date][i].id = i + "-" + response[date][i].start;
             response[date][i].start = formatDatetime(response[date][i].start, true);
             response[date][i].end = formatDatetime(response[date][i].end);
             response[date][i].date = date;
             if (response[date][i].points.length > 1) {
-              response[date][i].style.color = "#ee0000";
+              response[date][i].style = this.userDataTrackStyle;
               userTracks.push(response[date][i]);
             } else {
               userLocs.push(response[date][i]);
@@ -328,23 +358,31 @@
         //console.log(zoom);
         if (this.mapZoom !== zoom) {
           this.mapZoom = zoom;
-          if (zoom > 10) {
-            this.hideHeatmapLayers();
-            this.showMarkerLayer();
-          } else {
-            this.showHeatmapLayers();
-            this.hideMarkerLayer();
-          }
-          this.filterLocations("zoomUpdate");
+          this.updateLayersAfterPanAndZoom();
         }
       },
       centerUpdate(center) {
         if (this.mapCentre !== center) {
           this.mapCentre = center;
-          this.filterLocations("centerUpdate");
+          this.updateLayersAfterPanAndZoom();
         } else {
-          //console.log("center hasn't changed");
+          console.log("center hasn't changed");
         }
+      },
+      updateLayersAfterPanAndZoom() {
+        if (this.mapZoom > 8) {
+          this.hideHeatmapLayers();
+          this.hideMarkerLayer();
+          this.showPolygonsInView();
+          // } else if (this.mapZoom > 11) {
+          // this.hideHeatmapLayers();
+          // this.hideMarkerLayer();
+        } else {
+          this.showHeatmapLayers();
+          this.hideMarkerLayer();
+          // this.hideAllPolygons();
+        }
+        this.filterLocations("updateLayersAfterPanAndZoom");
       },
       showPopup(obj) {
         obj.target.openPopup();
@@ -354,7 +392,7 @@
       },
       showGeojsonPopup(geojson) {
         this.glidWithPopup = geojson.id;
-        this.geoJsonPopup = L.popup({ closeButton: false })
+        this.geoJsonPopup = L.popup({ closeButton: false, autoPan: false })
           .setLatLng(geojson.latlng)
           .setContent(geojson.content)
           .openOn(this.$refs.map.mapObject);
@@ -408,6 +446,50 @@
           //console.log("double-click");
         }
       },
+      showPolygonsInView(replace) {
+        if (replace) {
+          this.hideAllPolygons();
+        }
+        var me = this;
+        if (Object.prototype.hasOwnProperty.call(this.$refs, "map")) {
+          fetch(
+            "https://api.contactmap.me/glid_for_bounds/" +
+              this.selectedGroupType.value +
+              "/" +
+              this.$refs.map.mapObject
+                .getBounds()
+                .toBBoxString()
+                .split(",")
+                .join("/")
+          )
+            .then(function(response) {
+              if (response.status !== 200) {
+                //console.log("Looks like there was a problem. Status Code: " + response.status);
+                return;
+              }
+              response.json().then(function(data) {
+                if (data.error) {
+                  //console.log(data.error);
+                  return;
+                }
+                if (data.glids.length > 1) {
+                  for (var i = 0; i < data.glids.length; i++) {
+                    me.showPolygon(me.locationsLookup[data.glids[i]]);
+                  }
+                }
+              });
+            })
+            .catch(function(err) {
+              console.log("Fetch Error :-S", err);
+            });
+        }
+      },
+      hideAllPolygons() {
+        for (let i = 0; i < this.geojsons.length; i++) {
+          this.geoJsonStatusLookup[this.geojsons[i].id].visible = false;
+        }
+        this.geojsons = [];
+      },
       showPolygon(obj, event) {
         if (event) {
           event.originalEvent.stopPropagation();
@@ -420,7 +502,7 @@
         if (Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, glid)) {
           //console.log("already loaded polygon for " + obj.glid);
           if (this.geoJsonStatusLookup[glid].loading) {
-            //console.log("already loading " + glid);
+            console.log("already loading " + glid);
             return;
           }
           if (!this.geoJsonStatusLookup[glid].visible) {
@@ -428,19 +510,19 @@
             this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
             this.geoJsonStatusLookup[glid].visible = true;
           } else {
-            // if (event) {
-            //hide the geojson
-            let newArray = [];
-            for (let i = 0; i < this.geojsons.length; i++) {
-              if (this.geojsons[i].id !== glid) {
-                //console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
-                newArray.push(this.geojsons[i]);
+            if (event) {
+              //hide the geojson
+              let newArray = [];
+              for (let i = 0; i < this.geojsons.length; i++) {
+                if (this.geojsons[i].id !== glid) {
+                  //console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
+                  newArray.push(this.geojsons[i]);
+                }
               }
+              this.geoJsonStatusLookup[glid].visible = false;
+              //console.log("setting geojsons to "+JSON.stringify(newArray));
+              this.geojsons = newArray;
             }
-            this.geoJsonStatusLookup[glid].visible = false;
-            //console.log("setting geojsons to "+JSON.stringify(newArray));
-            this.geojsons = newArray;
-            // }
           }
           return;
         } else {
@@ -455,13 +537,13 @@
               return;
             }
             response.json().then(function(data) {
-              let colour = "#666666";
+              let colour = me.dataColorLookup[0];
               let value = 0;
               let content = "No data";
               let latlng = latLng(me.locationsLookup[glid].lat, me.locationsLookup[glid].lng);
               if (Object.prototype.hasOwnProperty.call(me.caseDataLookup, glid) && Object.prototype.hasOwnProperty.call(me.caseDataLookup[glid], "value")) {
                 value = me.caseDataLookup[glid].value;
-                colour = value > 39 ? me.dataColorLookup[39] : me.dataColorLookup[value];
+                colour = value >= me.dataColorLookup.length ? me.dataColorLookup[me.dataColorLookup.length - 1] : me.dataColorLookup[value];
                 content = me.caseDataLookup[glid].content;
                 latlng = me.caseDataLookup[glid].latlng;
               } else {
@@ -471,7 +553,7 @@
               let geojsonObj = {
                 geojson: data.polygon,
                 id: obj.glid,
-                style: { fillColor: colour, color: colour },
+                style: { fillColor: colour, color: colour, weight: 0, fillOpacity: 0.4 },
                 value: value,
                 content: content,
                 latlng: latlng,
@@ -505,17 +587,17 @@
           let glid = this.geojsons[i].id;
           if (Object.prototype.hasOwnProperty.call(this.caseDataLookup, glid)) {
             //console.log("updating polygon " + glid + ": " + this.caseDataLookup[glid].value);
-            let colour = "#ffffff";
+            let colour = this.dataColorLookup[0];
             let value = 0;
             if (Object.prototype.hasOwnProperty.call(this.caseDataLookup[glid], "value")) {
               value = this.caseDataLookup[glid].value;
-              colour = value > 39 ? this.dataColorLookup[39] : this.dataColorLookup[value];
+              colour = value >= this.dataColorLookup.length ? this.dataColorLookup[this.dataColorLookup.length - 1] : this.dataColorLookup[value];
             }
             //console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
             newArray.push({
               geojson: this.geojsons[i].geojson,
               id: this.geojsons[i].id,
-              style: { fillColor: colour, color: colour },
+              style: { fillColor: colour, color: colour, weight: 0, fillOpacity: 0.4 },
               value: value,
               content: this.caseDataLookup[glid].content,
               latlng: this.geojsons[i].latlng,
@@ -791,7 +873,7 @@
           this.gettingLocation = false;
           this.usersLocation = latLng(pos.coords.latitude, pos.coords.longitude);
           setTimeout(function() {
-            me.$refs.map.mapObject.setView(me.usersLocation, 7, { duration: 2 });
+            me.$refs.map.mapObject.setView(me.usersLocation, 9, { duration: 0.1 });
           }, 2000);
         },
         (err) => {
@@ -810,10 +892,13 @@
         me.setMapHeight();
       });
       for (let i = 0; i < 20; i++) {
-        this.dataColorLookup.push(rgbToHex((255 / 20) * i, 0, 255));
+        this.dataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
       }
-      for (let i = 0; i < 20; i++) {
-        this.dataColorLookup.push(rgbToHex(255, 0, 255 - Math.ceil((255 / 20) * i)));
+      for (let i = 0; i < 30; i++) {
+        this.dataColorLookup.push(rgbToHex(240, 240 - Math.ceil((240 / 30) * i), 0));
+      }
+      for (let i = 0; i < 30; i++) {
+        this.dataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 30) * i), 0, 0));
       }
       let dateChangeFunc = function() {
         //console.log(event);
@@ -824,11 +909,11 @@
       };
       document.removeEventListener("PLACE_DATA_LOADED", this.getPostcodeData);
       document.removeEventListener("POSTCODE_DATA_LOADED", this.updatePolygons);
-      document.removeEventListener("POSTCODE_DATA_LOADED", this.filterLocations);
+      document.removeEventListener("POSTCODE_DATA_LOADED", this.showPolygonsInView);
       document.removeEventListener("DATE_CHANGED", dateChangeFunc);
       document.addEventListener("PLACE_DATA_LOADED", this.getPostcodeData);
       document.addEventListener("POSTCODE_DATA_LOADED", this.updatePolygons);
-      document.addEventListener("POSTCODE_DATA_LOADED", this.filterLocations);
+      document.addEventListener("POSTCODE_DATA_LOADED", this.showPolygonsInView);
       document.addEventListener("DATE_CHANGED", dateChangeFunc);
       this.$nextTick(() => {
         this.getLocations();
@@ -856,8 +941,8 @@
 </script>
 
 <style>
-  @import "~leaflet.markercluster/dist/MarkerCluster.css";
-  @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+  /* @import "~leaflet.markercluster/dist/MarkerCluster.css";
+  @import "~leaflet.markercluster/dist/MarkerCluster.Default.css"; */
   @import "~vue-select/dist/vue-select.css";
   #cluster-css {
     width: 40px;
