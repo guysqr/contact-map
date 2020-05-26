@@ -5,8 +5,8 @@
       <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select>-->
       <div class="control-panel-label">Date:</div>
       <dynamic-select :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 15em"></dynamic-select>
-      <div class="control-panel-label">Area:</div>
-      <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>
+      <!-- <div class="control-panel-label">Area:</div>
+      <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select> -->
       <div class="control-panel-label">Grouping:</div>
       <dynamic-select :options="groupTypesArray" v-model="selectedGroupType" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 10em"></dynamic-select>
       <!-- <div class="control-panel-label">View:</div>
@@ -193,7 +193,7 @@
         casePostcodeArray: [],
         filteredCasePostcodeArray: [],
         locationsLookup: {},
-        locationsArray: [],
+        // locationsArray: [],
         filteredLocationsArray: [],
         selectedState: {
           label: 'Australia',
