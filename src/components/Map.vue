@@ -843,16 +843,7 @@
           });
       },
     },
-    created() {},
-    mounted() {
-      var me = this;
-      this.setMapHeight();
-      this.$refs.map.mapObject.on('load', function() {
-        me.zoomUpdate(me.mapZoom);
-      });
-      window.addEventListener('resize', function() {
-        me.setMapHeight();
-      });
+    created() {
       //do we support geolocation
       if ('geolocation' in navigator) {
         this.gettingLocation = true;
@@ -869,9 +860,10 @@
           },
           (err) => {
             this.gettingLocation = false;
-            console.log('Got an error when geolocating, perhaps Safari being annoying: ' + err.message);
+            console.log('Got an error when geolocating, perhaps Safari being annoying...');
+            console.log(err);
             setTimeout(function() {
-              me.$refs.map.mapObject.setView(me.mapCentre, 9, {
+              me.$refs.map.mapObject.setView(me.mapCentre, me.mapZoom, {
                 duration: 0.1,
               });
             }, 2000);
@@ -880,6 +872,17 @@
       } else {
         console.log('Geolocation is not available.');
       }
+    },
+    mounted() {
+      var me = this;
+      this.setMapHeight();
+      this.$refs.map.mapObject.on('load', function() {
+        me.zoomUpdate(me.mapZoom);
+      });
+      window.addEventListener('resize', function() {
+        me.setMapHeight();
+      });
+
       for (let i = 0; i < 20; i++) {
         this.dataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
       }
