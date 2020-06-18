@@ -844,6 +844,7 @@
       },
     },
     created() {
+      var me = this;
       //do we support geolocation
       if ('geolocation' in navigator) {
         this.gettingLocation = true;
