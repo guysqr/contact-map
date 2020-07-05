@@ -1,5 +1,5 @@
 <template>
-  <footer id="AppFooter">
+  <footer id="AppFooter" style="height:">
     <div class="attribution">
       Contact Map is an open source project and can be
       <a

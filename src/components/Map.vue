@@ -29,8 +29,8 @@
       </div>-->
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
-      <l-control position="bottomleft" style="z-index: 760">
-        <div>
+      <l-control position="bottomright" style="z-index: 760">
+        <div class="vue-dropzone dropzone" style="padding:2px">
           <div class="button-label">Step by day</div>
           <button @click="prevDate">
             <font-awesome-icon icon="angle-double-left" class="fa-4x"></font-awesome-icon>
@@ -127,7 +127,7 @@
       var startingMapCentre = maxMapBounds.getCenter();
       return {
         initComplete: false,
-        dataCache: { places: {}, postcodes: {} },
+        dataCache: { places: {}, postcodes: {}, glidsInView: {}, statesLoaded: false },
         polygonsInView: [],
         showMarkers: true,
         showHeatmap: true,
@@ -475,42 +475,58 @@
         if (replace === true) {
           this.hideAllPolygons();
         }
+
         var me = this;
         if (Object.prototype.hasOwnProperty.call(this.$refs, 'map')) {
-          fetch(
-            'https://api.contactmap.me/glid_for_bounds/' +
-              this.selectedGroupType.value +
-              '/' +
-              this.$refs.map.mapObject
-                .getBounds()
-                .toBBoxString()
-                .split(',')
-                .join('/')
-          )
-            .then(function(response) {
-              if (response.status !== 200) {
-                console.log('Looks like there was a problem. Status Code: ' + response.status);
-                return;
+          var bbKey =
+            this.selectedGroupType.value +
+            '/' +
+            this.$refs.map.mapObject
+              .getBounds()
+              .toBBoxString()
+              .split(',')
+              .join('/');
+          if (Object.prototype.hasOwnProperty.call(me.dataCache.glidsInView, bbKey)) {
+            var data = me.dataCache.glidsInView[bbKey];
+            if (data === 'Requested') {
+              return;
+            }
+            if (data.glids.length > 0) {
+              me.polygonsInView = data.glids;
+              me.hideOffscreenPolygons();
+              for (var i = 0; i < data.glids.length; i++) {
+                me.showPolygon(me.locationsLookup[data.glids[i]]);
               }
-              response.json().then(function(data) {
-                console.log('Glids in view');
-                console.log(data);
-                if (data.error) {
-                  //console.log(data.error);
+            }
+          } else {
+            me.dataCache.glidsInView[bbKey] = 'Requested';
+            fetch('https://api.contactmap.me/glid_for_bounds/' + bbKey)
+              .then(function(response) {
+                if (response.status !== 200) {
+                  console.log('Looks like there was a problem. Status Code: ' + response.status);
                   return;
                 }
-                if (data.glids.length > 0) {
-                  me.polygonsInView = data.glids;
-                  me.hideOffscreenPolygons();
-                  for (var i = 0; i < data.glids.length; i++) {
-                    me.showPolygon(me.locationsLookup[data.glids[i]]);
+                response.json().then(function(data) {
+                  console.log('Glids in view');
+                  console.log(data);
+                  if (data.error) {
+                    //console.log(data.error);
+                    return;
                   }
-                }
+                  me.dataCache.glidsInView[bbKey] = data;
+                  if (data.glids.length > 0) {
+                    me.polygonsInView = data.glids;
+                    me.hideOffscreenPolygons();
+                    for (var i = 0; i < data.glids.length; i++) {
+                      me.showPolygon(me.locationsLookup[data.glids[i]]);
+                    }
+                  }
+                });
+              })
+              .catch(function(err) {
+                console.log('Fetch Error :-S', err);
               });
-            })
-            .catch(function(err) {
-              console.log('Fetch Error :-S', err);
-            });
+          }
         }
       },
       hideAllPolygons() {
@@ -755,6 +771,10 @@
         }
       },
       getStates() {
+        if (this.dataCache.statesLoaded) {
+          return;
+        }
+        this.dataCache.statesLoaded = true;
         var me = this;
         fetch('https://api.contactmap.me/states')
           .then(function(response) {
@@ -819,17 +839,19 @@
         console.log(this.dataDiffsArray);
       },
       showDataChanges() {
-        for (var i = 0; i < this.diffPopups.length; i++) {
-          this.diffPopups[i].removeFrom(this.$refs.map.mapObject);
-        }
-        for (i = 0; i < this.dataDiffsArray.length; i++) {
-          var classChoice = this.dataDiffsArray[i].diff > 0 ? 'diff-popup-up' : 'diff-popup-down';
-          this.diffPopups.push(
-            L.popup({ closeButton: false, autoPan: false, className: classChoice, closeOnClick: false })
-              .setLatLng(this.dataDiffsArray[i].latlng)
-              .setContent('' + this.dataDiffsArray[i].diff)
-              .addTo(this.$refs.map.mapObject)
-          );
+        if (Object.prototype.hasOwnProperty.call(this.$refs, 'map')) {
+          for (var i = 0; i < this.diffPopups.length; i++) {
+            this.diffPopups[i].removeFrom(this.$refs.map.mapObject);
+          }
+          for (i = 0; i < this.dataDiffsArray.length; i++) {
+            var classChoice = this.dataDiffsArray[i].diff > 0 ? 'diff-popup-up' : 'diff-popup-down';
+            this.diffPopups.push(
+              L.popup({ closeButton: false, autoPan: false, className: classChoice, closeOnClick: false })
+                .setLatLng(this.dataDiffsArray[i].latlng)
+                .setContent('' + this.dataDiffsArray[i].diff)
+                .addTo(this.$refs.map.mapObject)
+            );
+          }
         }
       },
       getPlaceData() {
@@ -1105,13 +1127,12 @@
     border: 0px solid rgba(0, 0, 0, 0.2) !important;
   }
   button {
-    background-color: #975ef396;
+    background-color: rgb(0, 0, 0, 0);
     border-style: none;
     color: white;
-    border-color: #4800f1c0;
   }
   .button-label {
-    background-color: #975ef396;
+    background-color: rgb(0, 0, 0, 0);
     color: white;
     text-align: center;
     font-weight: bold;
