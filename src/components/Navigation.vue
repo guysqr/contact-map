@@ -23,10 +23,10 @@
 </template>
 
 <script>
-  import { AmplifyEventBus } from "aws-amplify-vue";
+  import { AmplifyEventBus } from 'aws-amplify-vue';
 
   export default {
-    name: "Navigation",
+    name: 'Navigation',
     data() {
       return {
         signedIn: false,
@@ -39,8 +39,8 @@
       } catch (err) {
         this.signedIn = false;
       }
-      AmplifyEventBus.$on("authState", (info) => {
-        this.signedIn = info === "signedIn";
+      AmplifyEventBus.$on('authState', (info) => {
+        this.signedIn = info === 'signedIn';
       });
     },
   };

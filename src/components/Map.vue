@@ -74,6 +74,10 @@
           {{ p.start }} to {{ p.end }}
         </l-tooltip>
       </l-circle>
+      <!-- <l-popup v-for="p in dataDiffsArray" v-bind:key="p.glid">
+          {{ p.diff }}
+        </l-popup> -->
+
       <l-rectangle :bounds="mapBounds" :fill="false" :weight="0"></l-rectangle>
     </l-map>
   </div>
@@ -82,7 +86,7 @@
 <script>
   import L from 'leaflet';
   import { latLng, latLngBounds } from 'leaflet';
-  // import { LMap, LTileLayer, LMarker, LTooltip, LPopup, LControl, LControlScale, LIcon, LRectangle, LCircle, LPolyline, LGeoJson } from "vue2-leaflet";
+  // import { LMap, LTileLayer, LMarker, LTooltip, LPopup, LControl, LControlScale, LIcon, LRectangle, LCircle, LPolyline, LGeoJson } from "vue2-leaflet";, LPopup
   import { LMap, LTileLayer, LTooltip, LControl, LControlScale, LRectangle, LCircle, LPolyline, LGeoJson } from 'vue2-leaflet';
 
   import DynamicSelect from 'vue-dynamic-select';
@@ -163,6 +167,8 @@
           dictDefaultMessage: 'Drop Google<br>Takeout JSON<br>file here...',
         },
         dataColorLookup: [],
+        // placeDataColorLookup: [],
+        // postcodeDataColorLookup: [],
         userTracks: [],
         userLocs: [],
         userDataTrackStyle: {
@@ -214,10 +220,13 @@
         ],
         selectedGroupType: { label: 'LGAs', value: 'places' },
         datesArray: [],
+        dataDiffsArray: [],
+        diffPopups: [],
         statesArray: [],
         lastMapClickLoc: null,
         selectedDate: { label: 'Latest', value: 'latest' },
         selectedIsoDate: null,
+        previousIsoDate: null,
         usersLocation: null,
         gettingLocation: false,
         lgaPolygons: {},
@@ -241,8 +250,8 @@
         mapCentre: startingMapCentre,
         url: 'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ',
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        withPopup: latLng(-37.799278, 145.059956),
-        withTooltip: latLng(-33.8858088, 151.10248109002),
+        // withPopup: latLng(-37.799278, 145.059956),
+        // withTooltip: latLng(-33.8858088, 151.10248109002),
         mapZoom: 5,
         showParagraph: false,
         accessToken: 'pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ',
@@ -367,7 +376,6 @@
           console.log("center hasn't changed");
         }
       },
-
       showPopup(obj) {
         obj.target.openPopup();
       },
@@ -376,14 +384,26 @@
       },
       showGeojsonPopup(geojson) {
         this.glidWithPopup = geojson.id;
+        var content = geojson.content;
+        for (var i = 0; i < this.dataDiffsArray.length; i++) {
+          if (this.dataDiffsArray[i].glid === geojson.id) {
+            content += '<br>Difference: ' + this.dataDiffsArray[i].diff;
+          }
+        }
         this.geoJsonPopup = L.popup({ closeButton: false, autoPan: false })
           .setLatLng(geojson.latlng)
-          .setContent(geojson.content)
+          .setContent(content)
           .openOn(this.$refs.map.mapObject);
       },
       refreshGeojsonPopup() {
         if (this.geoJsonPopup && this.glidWithPopup && Object.prototype.hasOwnProperty.call(this.caseDataLookup, this.glidWithPopup + '-' + this.selectedIsoDate)) {
-          this.geoJsonPopup.setContent(this.caseDataLookup[this.glidWithPopup + '-' + this.selectedIsoDate].content);
+          var content = this.caseDataLookup[this.glidWithPopup + '-' + this.selectedIsoDate].content;
+          for (var i = 0; i < this.dataDiffsArray.length; i++) {
+            if (this.dataDiffsArray[i].glid === 'diff-' + this.glidWithPopup) {
+              content += '<br>Difference: ' + this.dataDiffsArray[i].diff;
+            }
+          }
+          this.geoJsonPopup.setContent(content);
         } else if (this.geoJsonPopup) {
           this.geoJsonPopup.remove();
           this.glidWithPopup = null;
@@ -560,7 +580,7 @@
               return;
             }
             response.json().then(function(data) {
-              let colour = me.dataColorLookup[0];
+              let colour = 'rgba(0,0,0,0)';
               let value = 0;
               let content = 'No data';
               let latlng = latLng(me.locationsLookup[glid].lat, me.locationsLookup[glid].lng);
@@ -584,7 +604,9 @@
               };
               if (Object.prototype.hasOwnProperty.call(me.caseDataLookup, glid + '-' + me.selectedIsoDate) && Object.prototype.hasOwnProperty.call(me.caseDataLookup[glid + '-' + me.selectedIsoDate], 'value')) {
                 value = me.caseDataLookup[glid + '-' + me.selectedIsoDate].value;
-                colour = value >= me.dataColorLookup.length ? me.dataColorLookup[me.dataColorLookup.length - 1] : me.dataColorLookup[value];
+                //get lookup based on data position relative to peak
+                // colour = value >= me.dataColorLookup.length ? me.dataColorLookup[me.dataColorLookup.length - 1] : me.dataColorLookup[value];
+                colour = me.dataColorLookup[me.caseDataLookup[glid + '-' + me.selectedIsoDate].colourIndex];
                 content = me.caseDataLookup[glid + '-' + me.selectedIsoDate].content;
                 geojsonObj.style = {
                   fillColor: colour,
@@ -624,13 +646,19 @@
             continue;
           }
           let glid = this.geojsons[i].id;
+          // let dataKey = glid + '-' + this.selectedIsoDate;
+          // console.log(glid);
+          // console.log(dataKey);
+          // console.log(Object.prototype.hasOwnProperty.call(this.caseDataLookup, dataKey));
+          // console.log(this.polygonsInView.indexOf(glid));
           if (this.polygonsInView.indexOf(glid) > -1 && Object.prototype.hasOwnProperty.call(this.caseDataLookup, glid + '-' + this.selectedIsoDate)) {
-            // console.log("updating polygon " + this.geojsons[i].content + ": " + this.caseDataLookup[glid + "-" + this.selectedIsoDate].value);
+            // console.log('updating polygon ' + this.geojsons[i].content + ': ' + this.caseDataLookup[glid + '-' + this.selectedIsoDate].value);
             let colour = this.dataColorLookup[0];
             let value = 0;
             if (Object.prototype.hasOwnProperty.call(this.caseDataLookup[glid + '-' + this.selectedIsoDate], 'value')) {
               value = this.caseDataLookup[glid + '-' + this.selectedIsoDate].value;
-              colour = value >= this.dataColorLookup.length ? this.dataColorLookup[this.dataColorLookup.length - 1] : this.dataColorLookup[value];
+              // colour = value >= this.dataColorLookup.length ? this.dataColorLookup[this.dataColorLookup.length - 1] : this.dataColorLookup[value];
+              colour = this.dataColorLookup[this.caseDataLookup[glid + '-' + this.selectedIsoDate].colourIndex];
             }
             // console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
             let geojsonObj = {
@@ -650,7 +678,7 @@
             // newArray.push(geojsonObj);
             this.geoJsonStatusLookup[glid].geojsonObj = geojsonObj;
           } else {
-            console.log("couldn't update polygon " + this.geojsons[i].content + ': ' + glid + '-' + this.selectedIsoDate);
+            // console.log("couldn't update polygon " + this.geojsons[i].content + ': ' + glid + '-' + this.selectedIsoDate);
             this.geoJsonStatusLookup[glid].visible = false;
             // newArray.push(this.geojsons[i]);
           }
@@ -661,9 +689,9 @@
         });
       },
       setMapHeight() {
-        var heightString =
-          window.innerHeight - document.getElementById('Navigation').offsetHeight - document.getElementById('ControlPanel').offsetHeight - document.getElementById('AppHeader').offsetHeight - document.getElementById('AppFooter').offsetHeight + 'px';
+        var heightString = window.innerHeight - document.getElementById('ControlPanel').offsetHeight - document.getElementById('AppHeader').offsetHeight - document.getElementById('AppFooter').offsetHeight + 'px';
         document.getElementById('map').style.height = heightString;
+        //document.getElementById('Navigation').offsetHeight -
       },
       getLocations() {
         var me = this;
@@ -751,18 +779,55 @@
         if (!this.initComplete) {
           return;
         }
+        this.previousIsoDate = this.selectedIsoDate;
         if (obj.value === 'latest') {
           this.selectedIsoDate = this.datesArray[1].value; //swap for first real date
         } else {
           this.selectedIsoDate = obj.value;
         }
         this.selectedDate = obj;
+
         console.log('date set to ' + this.selectedIsoDate);
         document.dispatchEvent(new Event('DATE_CHANGED'));
       },
-
+      calculateChangesBetweenDates() {
+        this.dataDiffsArray = [];
+        var from = this.previousIsoDate,
+          to = this.selectedIsoDate;
+        for (var glid in this.geoJsonStatusLookup) {
+          if (this.geoJsonStatusLookup[glid].visible) {
+            if (Object.prototype.hasOwnProperty.call(this.caseDataLookup, glid + '-' + from) && Object.prototype.hasOwnProperty.call(this.caseDataLookup, glid + '-' + to)) {
+              if (this.caseDataLookup[glid + '-' + to].value - this.caseDataLookup[glid + '-' + from].value !== 0) {
+                this.dataDiffsArray.push({ glid: 'diff-' + glid, latlng: this.geoJsonStatusLookup[glid].geojsonObj.latlng, diff: this.caseDataLookup[glid + '-' + to].value - this.caseDataLookup[glid + '-' + from].value });
+              } else {
+                console.log('data diff for ' + glid + '=0');
+              }
+            } else {
+              console.log("didn't have data for " + glid + ' from ' + from + ' and ' + to);
+            }
+          }
+        }
+        console.log('data diffs');
+        this.showDataChanges();
+        console.log(this.dataDiffsArray);
+      },
+      showDataChanges() {
+        for (var i = 0; i < this.diffPopups.length; i++) {
+          this.diffPopups[i].removeFrom(this.$refs.map.mapObject);
+        }
+        for (i = 0; i < this.dataDiffsArray.length; i++) {
+          var classChoice = this.dataDiffsArray[i].diff > 0 ? 'diff-popup-up' : 'diff-popup-down';
+          this.diffPopups.push(
+            L.popup({ closeButton: false, autoPan: false, className: classChoice, closeOnClick: false })
+              .setLatLng(this.dataDiffsArray[i].latlng)
+              .setContent('' + this.dataDiffsArray[i].diff)
+              .addTo(this.$refs.map.mapObject)
+          );
+        }
+      },
       getPlaceData() {
         if (Object.prototype.hasOwnProperty.call(this.dataCache.places, this.selectedState.value.name + '/' + this.selectedDate.value)) {
+          console.log('** place data retrieved from dataCache for ' + this.selectedState.value.name + '/' + this.selectedDate.value);
           document.dispatchEvent(new Event('PLACE_DATA_LOADED'));
           return;
         }
@@ -776,17 +841,19 @@
               return;
             }
             response.json().then(function(data) {
+              // me.setPlaceColours(data.highest_cases);
               for (var key in data) {
                 if (Object.prototype.hasOwnProperty.call(data[key], 'lat') && Object.prototype.hasOwnProperty.call(data[key], 'lng')) {
                   Vue.set(me.caseDataLookup, key + '-' + me.selectedIsoDate, {
                     latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
+                    colourIndex: Math.ceil((data[key].cases / data.highest_cases) * 239),
                     value: data[key].cases.toString(),
                     content: data[key].cases.toString() + ' Covid-19 Cases<br>' + data[key].place + ' ' + data[key].state,
                     place: data[key].place + ' ' + data[key].state,
                   });
                 }
               }
-              console.log(me.caseDataLookup);
+              console.log(me.caseDataLookup, 'Case data lookup:');
               me.$nextTick(() => {
                 document.dispatchEvent(new Event('PLACE_DATA_LOADED'));
               });
@@ -798,6 +865,7 @@
       },
       getPostcodeData() {
         if (Object.prototype.hasOwnProperty.call(this.dataCache.postcodes, this.selectedState.value.name + '/' + this.selectedDate.value)) {
+          console.log('** postcode data retrieved from dataCache for ' + this.selectedState.value.name + '/' + this.selectedDate.value);
           document.dispatchEvent(new Event('ALL_DATA_LOADED'));
           return;
         }
@@ -814,10 +882,12 @@
             me.showHeatmap = false;
             me.showMarkers = false;
             response.json().then(function(data) {
+              // me.setPostcodeColours(data.highest_cases);
               for (var key in data) {
                 if (Object.prototype.hasOwnProperty.call(me.locationsLookup, key) && Object.prototype.hasOwnProperty.call(me.locationsLookup[key], 'lat') && Object.prototype.hasOwnProperty.call(me.locationsLookup[key], 'lng')) {
                   Vue.set(me.caseDataLookup, key + '-' + me.selectedIsoDate, {
                     latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
+                    colourIndex: Math.ceil((data[key].cases / data.highest_cases) * 239),
                     value: data[key].cases.toString(),
                     content: data[key].cases.toString() + ' Covid-19 Cases<br>' + data[key].place + ' ' + data[key].postcode + ' ' + data[key].state,
                     place: data[key].place + ' ' + data[key].postcode + ' ' + data[key].state,
@@ -825,7 +895,7 @@
                 }
               }
 
-              console.log(me.caseDataLookup);
+              console.log(me.caseDataLookup, 'Case data lookup:');
               me.showHeatmap = layerView === 'heatmap';
               me.hideHeatmap = layerView !== 'heatmap';
               me.showMarkers = layerView === 'markers';
@@ -842,6 +912,28 @@
             console.log('Fetch Error :-S', err);
           });
       },
+      // setPostcodeColours(peak) {
+      //   for (let i = 0; i < 20; i++) {
+      //     this.postcodeDataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
+      //   }
+      //   for (let i = 0; i < 30; i++) {
+      //     this.postcodeDataColorLookup.push(rgbToHex(240, 240 - Math.ceil((240 / 30) * i), 0));
+      //   }
+      //   for (let i = 0; i < 30; i++) {
+      //     this.postcodeDataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 30) * i), 0, 0));
+      //   }
+      // },
+      // setPlaceColours(peak) {
+      //   for (let i = 0; i < 20; i++) {
+      //     this.placeDataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
+      //   }
+      //   for (let i = 0; i < 30; i++) {
+      //     this.placeDataColorLookup.push(rgbToHex(240, 240 - Math.ceil((240 / 30) * i), 0));
+      //   }
+      //   for (let i = 0; i < 30; i++) {
+      //     this.placeDataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 30) * i), 0, 0));
+      //   }
+      // }
     },
     created() {
       var me = this;
@@ -884,15 +976,15 @@
         me.setMapHeight();
       });
 
-      for (let i = 0; i < 20; i++) {
-        this.dataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
+      for (let i = 0; i < 80; i++) {
+        this.dataColorLookup.push(rgbToHex((255 / 80) * i, 240, 0));
       }
-      for (let i = 0; i < 30; i++) {
-        this.dataColorLookup.push(rgbToHex(240, 240 - Math.ceil((240 / 30) * i), 0));
+      for (let i = 0; i < 160; i++) {
+        this.dataColorLookup.push(rgbToHex(255, 240 - Math.ceil((240 / 160) * i), 0));
       }
-      for (let i = 0; i < 30; i++) {
-        this.dataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 30) * i), 0, 0));
-      }
+      // for (let i = 0; i < 80; i++) {
+      //   this.dataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 80) * i), 0, 0));
+      // }
       let dateChangeFunc = function() {
         me.getPlaceData();
       };
@@ -900,6 +992,7 @@
         me.filterUserTrackData();
         me.filterUserLocData();
         me.updatePolygons();
+        me.calculateChangesBetweenDates();
       };
       document.removeEventListener('PLACE_DATA_LOADED', this.getPostcodeData);
       document.removeEventListener('ALL_DATA_LOADED', dataLoadedFunction);
@@ -1005,11 +1098,14 @@
     border: 0px solid rgba(0, 0, 0, 0.2) !important;
   }
   button {
-    background-color: #dff35e;
+    background-color: #975ef396;
+    border-style: none;
+    color: white;
+    border-color: #4800f1c0;
   }
   .button-label {
-    background-color: #dff35e;
-    color: black;
+    background-color: #975ef396;
+    color: white;
     text-align: center;
     font-weight: bold;
   }
@@ -1018,14 +1114,42 @@
   }
   .dropzone {
     min-height: auto;
-    background: #dff35e;
-    color: black;
+    background: #4a00f194;
+    color: #ffffff;
   }
   .dropzone:hover {
-    background: #ddff00;
+    background: #4800f1c0;
   }
   .vue-dropzone {
     border: 1px dashed #1f1f1f;
     border-radius: 10px;
+  }
+  .diff-popup-up .leaflet-popup-content {
+    margin: 5px 5px;
+    width: auto !important;
+    line-height: 1;
+    text-align: center;
+  }
+  .diff-popup-up .leaflet-popup-content-wrapper {
+    background: red;
+    color: #ffffff;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+  }
+  .diff-popup-up .leaflet-popup-tip-container {
+    display: none;
+  }
+  .diff-popup-down .leaflet-popup-content {
+    margin: 5px 5px;
+    width: auto !important;
+    line-height: 1;
+    text-align: center;
+  }
+  .diff-popup-down .leaflet-popup-content-wrapper {
+    background: green;
+    color: #fff;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+  }
+  .diff-popup-down .leaflet-popup-tip-container {
+    display: none;
   }
 </style>
