@@ -489,10 +489,12 @@
           )
             .then(function(response) {
               if (response.status !== 200) {
-                //console.log("Looks like there was a problem. Status Code: " + response.status);
+                console.log('Looks like there was a problem. Status Code: ' + response.status);
                 return;
               }
               response.json().then(function(data) {
+                console.log('Glids in view');
+                console.log(data);
                 if (data.error) {
                   //console.log(data.error);
                   return;
@@ -520,9 +522,14 @@
       hideHiddenPolygons() {
         console.log('hiding hidden polygons');
         let newArray = [];
-        for (var geo in this.geoJsonStatusLookup) {
-          if (this.geoJsonStatusLookup[geo].visible) {
-            newArray.push(this.geoJsonStatusLookup[geo].geojsonObj);
+        for (var glid in this.geoJsonStatusLookup) {
+          if (!this.geoJsonStatusLookup[glid].visible && this.polygonsInView.indexOf(glid) > -1) {
+            //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
+            this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
+            this.geoJsonStatusLookup[glid].visible = true;
+          }
+          if (this.geoJsonStatusLookup[glid].visible) {
+            newArray.push(this.geoJsonStatusLookup[glid].geojsonObj);
           }
         }
         this.geojsons.splice(0, this.geojsons.length);
