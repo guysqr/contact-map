@@ -1,0 +1,21 @@
+{
+    "appName": "contactmap",
+    "roleName": "pinpointLambdaRolef42a33ec",
+    "cloudformationPolicyName": "cloudformationPolicyf42a33ec",
+    "cloudWatchPolicyName": "cloudWatchPolicyf42a33ec",
+    "pinpointPolicyName": "pinpointPolicyf42a33ec",
+    "authPolicyName": "pinpoint_amplify_f42a33ec",
+    "unauthPolicyName": "pinpoint_amplify_f42a33ec",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "authRoleArn": {
+        "Fn::GetAtt": [
+            "AuthRole",
+            "Arn"
+        ]
+    }
+}

@@ -30,5 +30,11 @@
 			"service": "Lambda"
 		}
 	},
-	"api": {}
+	"api": {},
+	"analytics": {
+		"contactmap": {
+			"service": "Pinpoint",
+			"providerPlugin": "awscloudformation"
+		}
+	}
 }

@@ -1,6 +1,6 @@
 {
     "identityPoolName": "vuecontactmapfb949b1d_identitypool_fb949b1d",
-    "allowUnauthenticatedIdentities": false,
+    "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "vueconfb949b1d",
     "userPoolName": "vuecontactmapfb949b1d_userpool_fb949b1d",
     "autoVerifiedAttributes": [
