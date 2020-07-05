@@ -30,13 +30,13 @@
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
       <l-control position="bottomright" style="z-index: 760">
-        <div class="vue-dropzone dropzone" style="padding:2px">
+        <div class="vue-dropzone dropzone" style="padding:10px 16px">
           <div class="button-label">Step by day</div>
-          <button @click="prevDate">
-            <font-awesome-icon icon="angle-double-left" class="fa-4x"></font-awesome-icon>
+          <button @click="prevDate" style="padding:5px">
+            <font-awesome-icon icon="angle-double-left" class="fa-3x"></font-awesome-icon>
           </button>
-          <button @click="nextDate">
-            <font-awesome-icon icon="angle-double-right" class="fa-4x"></font-awesome-icon>
+          <button @click="nextDate" style="padding:5px">
+            <font-awesome-icon icon="angle-double-right" class="fa-3x"></font-awesome-icon>
           </button>
         </div>
       </l-control>
@@ -1151,6 +1151,7 @@
   .vue-dropzone {
     border: 1px dashed #1f1f1f;
     border-radius: 10px;
+    font-weight: bold;
   }
   .diff-popup-up .leaflet-popup-content {
     margin: 5px 5px;
