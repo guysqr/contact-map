@@ -1,15 +1,15 @@
-version: 0.1
+version: 0.2
 frontend:
   phases:
     preBuild:
       commands:
-        - rm -rf node_modules package-lock.json && npm install
+        - yarn lint
     build:
       commands:
-        - npx vue-cli-service build
+        - yarn build
   artifacts:
     # IMPORTANT - Please verify your build output directory
-    baseDirectory: dist
+    baseDirectory: vue-contact-map/dist
     files:
       - '**/*'
   cache:
