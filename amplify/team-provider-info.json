@@ -60,9 +60,6 @@
             "AmplifyAppId": "d932atxapzkq"
         },
         "categories": {
-            "auth": {
-                "vuecontactmapfb949b1d": {}
-            },
             "hosting": {
                 "amplifyhosting": {
                     "appId": "d932atxapzkq",

@@ -1,6 +1,9 @@
 import Vue from "vue";
 import App from "./App.vue";
-import Amplify, * as AmplifyModules from "aws-amplify";
+import {
+  Amplify
+} from "aws-amplify";
+// import { * as AmplifyModules }  from "aws-amplify";
 import {
   AmplifyPlugin
 } from "aws-amplify-vue";
@@ -29,7 +32,7 @@ import {
 } from '@fortawesome/vue-fontawesome'
 import L from 'leaflet';
 require('leaflet/dist/leaflet.css');
-import Snotify from 'vue-snotify';
+// import Snotify from 'vue-snotify';
 
 // FIX leaflet's default icon path problems with webpack
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,7 +51,7 @@ library.add(faAngleDoubleRight);
 library.add(faAngleDoubleLeft);
 
 Amplify.configure(aws_exports);
-Vue.use(AmplifyPlugin, AmplifyModules, VueWindowSize, Snotify); //VueMoment,
+Vue.use(AmplifyPlugin, VueWindowSize); //VueMoment,AmplifyModules, 
 
 Vue.config.productionTip = false;
 
