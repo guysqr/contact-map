@@ -4,29 +4,22 @@
       <!-- <div class="control-panel-label">State:</div>
       <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select>-->
       <div class="control-panel-label">Date:</div>
-      <dynamic-select :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 15em"></dynamic-select>
+      <vue-select :clearable="false" :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 13em"></vue-select>
       <!-- <div class="control-panel-label">Area:</div>
       <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>-->
       <div class="control-panel-label">Grouping:</div>
-      <dynamic-select :options="groupTypesArray" v-model="selectedGroupType" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 10em"></dynamic-select>
+      <vue-select :clearable="false" :options="groupTypesArray" v-model="selectedGroupType" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 10em"></vue-select>
+      <div class="control-panel-label">Colour Metric:</div>
+      <vue-select :clearable="false" :options="colourMetricsArray" v-model="selectedColourMetric" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 20em"></vue-select>
+      <span class="message">{{ message }}</span>
       <!-- <div class="control-panel-label">View:</div>
       <dynamic-select :options="viewOptions" v-model="selectedView" @input="setViewOption" option-value="value" option-text="label" style="width: 10em"></dynamic-select>-->
     </div>
-    <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" @click="showDataUnderClick" ref="map" style="width:100%; height: 100vh; z-index: 100">
+    <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" ref="map" style="width:100%; height: 100vh; z-index: 100">
+      <!--      @click="showDataUnderClick"-->
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style"></l-geo-json>
-      <!-- <LeafletHeatmap v-if="showHeatmap" :visible="!hideHeatmap" :lat-lng="filteredLatLngPostcodeArray" :max="10" :radius="30" :blur="60" :minOpacity="1" :maxOpacity="0.9" :gradient="heatmapGradient3" ref="heatmap_postcodes"></LeafletHeatmap>
-      <LeafletHeatmap v-if="showHeatmap" :visible="!hideHeatmap" :lat-lng="filteredLatLngPlaceArray" :max="10" :radius="30" :blur="60" :gradient="heatmapGradient3" :minOpacity="1" :maxOpacity="0.9" ref="heatmap_places"></LeafletHeatmap>-->
-      <!-- <div>
-        <l-marker ref="markersPlace" v-for="c in filteredCasePlaceArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'place-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
-          <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
-          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false, autoPan: false }"></l-popup>
-        </l-marker>
-        <l-marker ref="markersPostcode" v-for="c in filteredCasePostcodeArray" :lat-lng="c.latlng" :value="c.value" v-bind:key="'postcode-' + c.glid" :options="markerOptions" :name="c.glid" @mouseover="showPopup" @click="showPolygon(c, $event)">
-          <l-icon :icon="icon" :options="iconOptions" :iconSize="[c.iconSize, c.iconSize]" :iconAnchor="c.iconAnchor"></l-icon>
-          <l-popup :content="c.content" :latLng="c.latlng" :options="{ closeButton: false, autoPan: false }"></l-popup>
-        </l-marker>
-      </div>-->
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
+
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
       <l-control position="bottomright" style="z-index: 760">
@@ -54,18 +47,7 @@
           {{ p.start }} to {{ p.end }}
         </l-tooltip>
       </l-polyline>
-      <l-circle
-        v-for="p in filteredLocData"
-        v-bind:key="p.id"
-        :lat-lng="p.points[0]"
-        :radius="200"
-        :color="p.style.color"
-        :stroke="p.style.stroke"
-        :weight="p.style.weight"
-        :fillColor="p.style.color"
-        :fillOpacity="p.style.fillOpacity"
-        :options="{ pane: 'shadowPane' }"
-      >
+      <l-circle v-for="p in filteredLocData" v-bind:key="p.id" :lat-lng="p.points[0]" :radius="200" :color="p.style.color" :stroke="p.style.stroke" :weight="p.style.weight" :fillColor="p.style.color" :fillOpacity="p.style.fillOpacity" :options="{ pane: 'shadowPane' }">
         <l-tooltip :options="{ permanent: false, interactive: true }">
           <strong>Place:</strong>
           {{ p.description }}
@@ -78,8 +60,9 @@
           {{ p.diff }}
       </l-popup>-->
 
-      <l-rectangle :bounds="mapBounds" :fill="false" :weight="0"></l-rectangle>
+      <!-- <l-rectangle :bounds="mapBounds" :fill="false" :weight="0"></l-rectangle> -->
     </l-map>
+    <pulse-loader v-if="displaySpinner" color="#2c3e50" radius="200%" size="25px" margin="10px" style="position: absolute; top: calc(50vh - 50px); margin-left: calc(50vw - 50px); z-index: 2001;"></pulse-loader>
   </div>
 </template>
 
@@ -87,9 +70,10 @@
   import L from 'leaflet';
   import { latLng, latLngBounds } from 'leaflet';
   // import { LMap, LTileLayer, LMarker, LTooltip, LPopup, LControl, LControlScale, LIcon, LRectangle, LCircle, LPolyline, LGeoJson } from "vue2-leaflet";, LPopup
-  import { LMap, LTileLayer, LTooltip, LControl, LControlScale, LRectangle, LCircle, LPolyline, LGeoJson } from 'vue2-leaflet';
+  import { LMap, LTileLayer, LTooltip, LControl, LControlScale, LCircle, LPolyline, LGeoJson } from 'vue2-leaflet';
 
-  import DynamicSelect from 'vue-dynamic-select';
+  // import DynamicSelect from 'vue-dynamic-select';
+  import VueSelect from 'vue-select';
   // import LeafletHeatmap from "./Vue2LeafletHeatmap";
   import Vue2LeafletDrawToolbar from 'vue2-leaflet-draw-toolbar';
   import { OpenStreetMapProvider } from 'leaflet-geosearch';
@@ -110,12 +94,13 @@
       LControl,
       LControlScale,
       // LIcon,
-      LRectangle,
+      // LRectangle,
       LCircle,
       LPolyline,
       LGeoJson,
       'l-draw-toolbar': Vue2LeafletDrawToolbar,
-      DynamicSelect,
+      // DynamicSelect,
+      VueSelect,
       VGeosearch,
       vueDropzone: vue2Dropzone,
     },
@@ -125,8 +110,56 @@
       var corner2 = latLng(-8.44428, 110.060151);
       var maxMapBounds = latLngBounds(corner1, corner2);
       var startingMapCentre = maxMapBounds.getCenter();
+      if (localStorage.startingMapCentre) {
+        startingMapCentre = JSON.parse(localStorage.startingMapCentre);
+      }
+      var startingMapZoom = 5;
+      if (localStorage.startingMapZoom) {
+        startingMapZoom = Number(localStorage.startingMapZoom);
+      }
+
+      var colourMetricsArray = [
+        { label: 'Total Cases', value: 'relativeHighest' },
+        { label: 'Active Cases', value: 'activeHighest' },
+        { label: 'Total Cases per Capita', value: 'totalPerCap' },
+        { label: 'Active Cases per Capita', value: 'activePerCap' },
+      ];
+
+      var startingColourMetric = colourMetricsArray[0];
+      if (this.$route.query.metric) {
+        for (var i = 0; i < colourMetricsArray.length; i++) {
+          if (colourMetricsArray[i].value === this.$route.query.metric) {
+            startingColourMetric = colourMetricsArray[i];
+          }
+        }
+      } else if (localStorage.startingColourMetric) {
+        startingColourMetric = JSON.parse(localStorage.startingColourMetric);
+      }
+
+      var groupTypesArray = [
+        { label: 'LGAs', value: 'places' },
+        { label: 'QLD HHS', value: 'qld' },
+        { label: 'Postcodes', value: 'postcodes' },
+      ];
+
+      var startingGroupType = groupTypesArray[0];
+      if (this.$route.query.group) {
+        for (i = 0; i < groupTypesArray.length; i++) {
+          if (groupTypesArray[i].value === this.$route.query.group) {
+            startingGroupType = groupTypesArray[i];
+          }
+        }
+      } else if (localStorage.startingGroupType) {
+        startingGroupType = JSON.parse(localStorage.startingGroupType);
+      }
+
       return {
         initComplete: false,
+        displaySpinner: true,
+        spinnerStackDepth: 0,
+        message: 'Loading...',
+        // colourMetric: 'relativeHighest',
+        geoOptions: { onEachFeature: this.showSpinnerTemporarily },
         dataCache: {
           places: {},
           postcodes: {},
@@ -147,23 +180,6 @@
         },
         geojsons: [],
         mapBounds: [corner1, corner2],
-        // heatmapGradient: {
-        //   0.3: "rgba(250,1,1,1)",
-        //   0.5: "rgba(250,1,1,1)",
-        //   1: "rgba(250,1,1,1)"
-        // },
-        // heatmapGradient2: {
-        //   0.2: "#ffffb2",
-        //   0.4: "#fd8d3c",
-        //   0.6: "#fd8d3c",
-        //   0.8: "#f03b20",
-        //   1: "#bd0026"
-        // },
-        // heatmapGradient3: {
-        //   0.0: "yellow",
-        //   0.5: "orange",
-        //   1.0: "red"
-        // },
         dropzoneOptions: {
           url: 'https://api.contactmap.me/upload',
           thumbnailWidth: 100,
@@ -218,12 +234,11 @@
             geom_table: 'australia_polygon',
           },
         },
-        groupTypesArray: [
-          { label: 'LGAs', value: 'places' },
-          { label: 'QLD HHS', value: 'qld' },
-          { label: 'Postcodes', value: 'postcodes' },
-        ],
-        selectedGroupType: { label: 'LGAs', value: 'places' },
+        groupTypesArray: groupTypesArray,
+        selectedGroupType: startingGroupType,
+        colourMetricsArray: colourMetricsArray,
+        selectedColourMetric: startingColourMetric,
+        defaultColourMetric: startingColourMetric,
         datesArray: [],
         dataDiffsArray: [],
         diffPopups: [],
@@ -241,7 +256,7 @@
           { value: 'marker', label: 'Markers' },
         ],
         selectedView: { value: 'heat', label: 'Heatmap' },
-        geojsonStyle: { style: { color: 'red', fillColor: 'green', stroke: 1 } },
+        // geojsonStyle: { style: { color: 'red', fillColor: 'green', stroke: 1 } },
         icon: L.icon({
           iconUrl: 'https://www.contactmap.me/img/coronavirus.svg',
         }),
@@ -257,7 +272,7 @@
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         // withPopup: latLng(-37.799278, 145.059956),
         // withTooltip: latLng(-33.8858088, 151.10248109002),
-        mapZoom: 5,
+        mapZoom: startingMapZoom,
         showParagraph: false,
         accessToken: 'pk.eyJ1IjoiZ3V5bW9ydG9uIiwiYSI6ImNrOHkwNmg3bzAwMzkzZ3RibG9wem43N20ifQ.Lgs-FlpaE3S61_eGyTCEsQ',
         mapOptions: {
@@ -284,13 +299,13 @@
       setViewOption(obj) {
         this.selectedView.value = obj.value;
         //console.log(obj);
-        if (this.selectedView.value === 'heat') {
-          this.showHeatmap = true;
-          this.showMarkers = false;
-        } else {
-          this.showHeatmap = false;
-          this.showMarkers = true;
-        }
+        // if (this.selectedView.value === 'heat') {
+        //   this.showHeatmap = true;
+        //   this.showMarkers = false;
+        // } else {
+        //   this.showHeatmap = false;
+        //   this.showMarkers = true;
+        // }
       },
       handleData(file, response) {
         //console.log(response);
@@ -369,13 +384,14 @@
       zoomUpdate(zoom) {
         //console.log(zoom);
         if (this.mapZoom !== zoom) {
-          this.mapZoom = zoom;
+          localStorage.startingMapZoom = this.mapZoom = zoom;
           this.showPolygonsInView();
         }
       },
       centerUpdate(center) {
         if (this.mapCentre !== center) {
           this.mapCentre = center;
+          localStorage.startingMapCentre = JSON.stringify(this.mapCentre);
           this.showPolygonsInView();
         } else {
           console.log("center hasn't changed");
@@ -391,11 +407,15 @@
         this.glidWithPopup = geojson.id;
         var content = geojson.content;
         for (var i = 0; i < this.dataDiffsArray.length; i++) {
-          if (this.dataDiffsArray[i].glid === geojson.id) {
+          if (this.dataDiffsArray[i].glid === 'diff-' + geojson.id) {
             content += '<br>Difference: ' + this.dataDiffsArray[i].diff;
           }
         }
-        this.geoJsonPopup = L.popup({ closeButton: false, autoPan: false, offset: [0, -20] })
+        this.geoJsonPopup = L.popup({
+          closeButton: false,
+          autoPan: false,
+          offset: [0, -20],
+        })
           .setLatLng(geojson.latlng)
           .setContent(content)
           .openOn(this.$refs.map.mapObject);
@@ -479,6 +499,11 @@
         }
         if (replace === true) {
           this.hideAllPolygons();
+          //change colouring model if we need to
+          console.log(this.selectedColourMetric);
+          localStorage.startingGroupType = JSON.stringify(this.selectedGroupType);
+          localStorage.startingColourMetric = JSON.stringify(this.selectedColourMetric);
+          this.processPlaceData();
         }
 
         var me = this;
@@ -575,6 +600,15 @@
           }
           if (!this.geoJsonStatusLookup[glid].visible && this.polygonsInView.indexOf(glid) > -1) {
             //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
+            if (this.caseDataLookup[glid + '-' + this.selectedIsoDate]) {
+              var colour = this.dataColorLookup[this.caseDataLookup[glid + '-' + this.selectedIsoDate].colourIndex];
+              var content = this.caseDataLookup[glid + '-' + this.selectedIsoDate].content;
+
+              this.geoJsonStatusLookup[glid].geojsonObj.style.fillColor = colour;
+              this.geoJsonStatusLookup[glid].geojsonObj.style.color = 'silver';
+              this.geoJsonStatusLookup[glid].geojsonObj.content = content;
+            }
+
             this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
             this.geoJsonStatusLookup[glid].visible = true;
           } else {
@@ -623,8 +657,9 @@
                 bbox: data.bbox,
                 style: {
                   fillColor: colour,
-                  color: colour,
-                  weight: 0,
+                  color: 'silver',
+                  strokeWidth: 0.5,
+                  weight: 0.5,
                   fillOpacity: 0.4,
                 },
               };
@@ -640,8 +675,9 @@
                 content = me.caseDataLookup[glid + '-' + me.selectedIsoDate].content;
                 geojsonObj.style = {
                   fillColor: colour,
-                  color: colour,
-                  weight: 0,
+                  color: 'silver',
+                  strokeWidth: 0.5,
+                  weight: 0.5,
                   fillOpacity: 0.4,
                 };
                 geojsonObj.value = value;
@@ -662,6 +698,7 @@
       },
       updatePolygons() {
         console.log('running updatePolygons');
+        this.showSpinnerTemporarily(3000);
         // let newArray = [];
         //if this has been hidden during a previous update, add it back to test it again
         for (let glid in this.geoJsonStatusLookup) {
@@ -696,8 +733,9 @@
               id: this.geojsons[i].id,
               style: {
                 fillColor: colour,
-                color: colour,
-                weight: 0,
+                color: 'silver',
+                strokeWidth: 0.5,
+                weight: 0.5,
                 fillOpacity: 0.4,
               },
               value: value,
@@ -716,6 +754,7 @@
         this.$nextTick(() => {
           this.hideHiddenPolygons();
           this.refreshGeojsonPopup();
+          this.hideSpinner();
         });
       },
       setMapHeight() {
@@ -754,12 +793,15 @@
                 //find date in data
                 var dateIndex = 0;
                 for (var i = 0; i < me.datesArray.length; i++) {
-                  if (me.datesArray[i].value === me.$route.query.date) {
+                  if (me.datesArray[i].value.substr(0, 10) === me.$route.query.date.substr(0, 10)) {
                     dateIndex = i;
                   }
                 }
                 me.selectedIsoDate = me.datesArray[dateIndex].value;
                 me.selectedDate = me.datesArray[dateIndex];
+              } else if (localStorage.startingDate) {
+                me.selectedIsoDate = JSON.parse(localStorage.startingIsoDate);
+                me.selectedDate = JSON.parse(localStorage.startingDate);
               } else {
                 me.selectedIsoDate = me.datesArray[0].value;
                 me.selectedDate = me.datesArray[0];
@@ -779,6 +821,7 @@
         if (curPos >= 1) {
           this.selectedDate = this.datesArray[curPos - 1];
         }
+        this.setDate(this.selectedDate);
       },
       prevDate() {
         //console.log("prev");
@@ -788,6 +831,7 @@
         } else if (this.datesArray.length > curPos + 1) {
           this.selectedDate = this.datesArray[curPos + 1];
         }
+        this.setDate(this.selectedDate);
       },
       getStates() {
         if (this.dataCache.statesLoaded) {
@@ -832,8 +876,10 @@
           this.selectedIsoDate = obj.value;
         }
         this.selectedDate = obj;
-
+        // this.hideAllPolygons();
         console.log('date set to ' + this.selectedIsoDate);
+        localStorage.startingDate = JSON.stringify(this.selectedDate);
+        localStorage.startingIsoDate = JSON.stringify(this.selectedIsoDate);
         document.dispatchEvent(new Event('DATE_CHANGED'));
       },
       calculateChangesBetweenDates() {
@@ -890,6 +936,7 @@
         }
       },
       getPlaceData() {
+        this.message = 'Loading data...';
         if (Object.prototype.hasOwnProperty.call(this.dataCache.places, this.selectedState.value.name + '/' + this.selectedDate.value)) {
           console.log('** place data retrieved from dataCache for ' + this.selectedState.value.name + '/' + this.selectedDate.value);
           document.dispatchEvent(new Event('PLACE_DATA_LOADED'));
@@ -905,44 +952,11 @@
               return;
             }
             response.json().then(function(data) {
-              // me.setPlaceColours(data.highest_cases);
-              for (var key in data) {
-                if (Object.prototype.hasOwnProperty.call(data[key], 'lat') && Object.prototype.hasOwnProperty.call(data[key], 'lng')) {
-                  var population = me.locationsLookup[key].population;
-                  var casesPerCapita = null;
-                  var activePerCapita = null;
-                  if (population) {
-                    casesPerCapita = (data[key].cases / me.locationsLookup[key].population) * 100;
-                    activePerCapita = (data[key].active / me.locationsLookup[key].population) * 100;
-                  }
-                  var colourIndex = Math.ceil(activePerCapita * 239) > 239 ? 1 : Math.ceil(activePerCapita * 239);
-                  Vue.set(me.caseDataLookup, key + '-' + me.selectedIsoDate, {
-                    latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
-                    // colourIndex: Math.ceil((data[key].cases / data.highest_cases) * 239),
-                    colourIndex: colourIndex,
-                    value: data[key].cases.toString(),
-                    population: population,
-                    casesPerCapita: casesPerCapita,
-                    activePerCapita: activePerCapita,
-                    content:
-                      data[key].cases +
-                      ' Covid-19 Cases<br>' +
-                      data[key].place +
-                      ' ' +
-                      data[key].state +
-                      '<br>Population: ' + population +
-                      '<br>Total Cases: ' + data[key].cases +
-                      '<br>Active Cases: ' + data[key].active +
-                      '<br>% of residents infected (total): ' +
-                      Math.round(casesPerCapita * 100) / 100 +
-                      '%<br>% of residents infectious (active): ' +
-                      Math.round(activePerCapita * 100) / 100 +
-                      '%',
-                    place: data[key].place + ' ' + data[key].state,
-                  });
-                }
-              }
-              console.log(me.caseDataLookup, 'Case data lookup:');
+              console.log(data);
+              me.dataCache.places[me.selectedState.value.name + '/' + me.selectedDate.value] = data;
+
+              me.processPlaceData();
+
               me.$nextTick(() => {
                 document.dispatchEvent(new Event('PLACE_DATA_LOADED'));
               });
@@ -952,7 +966,30 @@
             console.log('Fetch Error :-S', err);
           });
       },
+      processPlaceData() {
+        var data = this.dataCache.places[this.selectedState.value.name + '/' + this.selectedDate.value];
+        for (var key in data) {
+          if (data[key].geometry_table_id !== null && Object.prototype.hasOwnProperty.call(data[key], 'lat') && Object.prototype.hasOwnProperty.call(data[key], 'lng')) {
+            var activeCases = data[key].active ? data[key].active : 'Unknown';
+            var decorated = this.decorateData(data, key);
+            Vue.set(this.caseDataLookup, key + '-' + this.selectedIsoDate, {
+              latlng: latLng(this.locationsLookup[key].lat, this.locationsLookup[key].lng),
+              colourIndex: decorated.colourIndex,
+              value: data[key].cases.toString(),
+              cases: data[key].cases,
+              active: activeCases,
+              population: decorated.population,
+              casesPerCapita: decorated.casesPerCapita,
+              activePerCapita: decorated.activePerCapita,
+              content: decorated.content,
+              place: data[key].place + ' ' + data[key].state,
+            });
+          }
+        }
+        console.log(this.caseDataLookup, 'Case data lookup:');
+      },
       getPostcodeData() {
+        this.showSpinnerTemporarily(3000);
         if (Object.prototype.hasOwnProperty.call(this.dataCache.postcodes, this.selectedState.value.name + '/' + this.selectedDate.value)) {
           console.log('** postcode data retrieved from dataCache for ' + this.selectedState.value.name + '/' + this.selectedDate.value);
           document.dispatchEvent(new Event('ALL_DATA_LOADED'));
@@ -960,24 +997,28 @@
         }
         this.dataCache.postcodes[this.selectedState.value.name + '/' + this.selectedDate.value] = true;
         var me = this;
-        var layerView = this.showHeatmap ? 'heatmap' : 'markers';
+        // var layerView = this.showHeatmap ? 'heatmap' : 'markers';
         //console.log("getting data");
         fetch('https://api.contactmap.me/by_postcode/' + this.selectedState.value.name + '/' + this.selectedDate.value)
           .then(function(response) {
             if (response.status !== 200) {
               //console.log("Looks like there was a problem. Status Code: " + response.status);
+              me.hideSpinner();
               return;
             }
-            me.showHeatmap = false;
-            me.showMarkers = false;
+            // me.showHeatmap = false;
+            // me.showMarkers = false;
             response.json().then(function(data) {
               // me.setPostcodeColours(data.highest_cases);
               for (var key in data) {
                 if (Object.prototype.hasOwnProperty.call(me.locationsLookup, key) && Object.prototype.hasOwnProperty.call(me.locationsLookup[key], 'lat') && Object.prototype.hasOwnProperty.call(me.locationsLookup[key], 'lng')) {
+                  var activeCases = data[key].active ? data[key].active : 'Unknown';
                   Vue.set(me.caseDataLookup, key + '-' + me.selectedIsoDate, {
                     latlng: latLng(me.locationsLookup[key].lat, me.locationsLookup[key].lng),
                     colourIndex: Math.ceil((data[key].cases / data.highest_cases) * 239),
                     value: data[key].cases.toString(),
+                    cases: data[key].cases.toString(),
+                    active: activeCases,
                     content: data[key].cases.toString() + ' Covid-19 Cases<br>' + data[key].place + ' ' + data[key].postcode + ' ' + data[key].state,
                     place: data[key].place + ' ' + data[key].postcode + ' ' + data[key].state,
                   });
@@ -985,95 +1026,140 @@
               }
 
               console.log(me.caseDataLookup, 'Case data lookup:');
-              me.showHeatmap = layerView === 'heatmap';
-              me.hideHeatmap = layerView !== 'heatmap';
-              me.showMarkers = layerView === 'markers';
+
               if (me.initComplete === false) {
                 me.initComplete = true;
                 document.dispatchEvent(new Event('INIT_COMPLETE'));
               }
               me.$nextTick(() => {
+                me.hideSpinner();
+                // me.message = 'Data loading complete.';
                 document.dispatchEvent(new Event('ALL_DATA_LOADED'));
               });
             });
           })
           .catch(function(err) {
+            me.hideSpinner();
             console.log('Fetch Error :-S', err);
           });
       },
-      // setPostcodeColours(peak) {
-      //   for (let i = 0; i < 20; i++) {
-      //     this.postcodeDataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
-      //   }
-      //   for (let i = 0; i < 30; i++) {
-      //     this.postcodeDataColorLookup.push(rgbToHex(240, 240 - Math.ceil((240 / 30) * i), 0));
-      //   }
-      //   for (let i = 0; i < 30; i++) {
-      //     this.postcodeDataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 30) * i), 0, 0));
-      //   }
-      // },
-      // setPlaceColours(peak) {
-      //   for (let i = 0; i < 20; i++) {
-      //     this.placeDataColorLookup.push(rgbToHex((240 / 20) * i, 240, 0));
-      //   }
-      //   for (let i = 0; i < 30; i++) {
-      //     this.placeDataColorLookup.push(rgbToHex(240, 240 - Math.ceil((240 / 30) * i), 0));
-      //   }
-      //   for (let i = 0; i < 30; i++) {
-      //     this.placeDataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 30) * i), 0, 0));
-      //   }
-      // }
+      decorateData(data, glid) {
+        var decorated = {};
+        if (!Object.prototype.hasOwnProperty.call(this.locationsLookup, glid)) {
+          console.log(glid + ' not found');
+          return {};
+        }
+        var population = this.locationsLookup[glid].population ? this.locationsLookup[glid].population : 'Unknown';
+        var postcode = data[glid].postcode ? data[glid].postcode + ': ' : '';
+        var casesPerCapita = null;
+        var activeCases = data[glid].active !== null ? data[glid].active : 'Unknown';
+        var activePerCapita = null;
+        decorated.colourIndex = 0;
+        decorated.content = '<b>' + data[glid].cases + ' Covid-19 Cases</b><br>' + data[glid].place + ' ' + data[glid].state + '<br>Population: ' + population + '<br>Total Cases: ' + data[glid].cases;
+        console.log(this.selectedColourMetric.value);
+        if (population !== 'Unknown' && activeCases !== 'Unknown' && this.selectedColourMetric.value === 'activePerCap') {
+          decorated.casesPerCapita = casesPerCapita = (data[glid].cases / population) * 100;
+          decorated.activePerCapita = activePerCapita = (data[glid].active / population) * 100;
+          decorated.colourIndex = Math.ceil(decorated.activePerCapita * 239) > 239 ? 239 : Math.ceil(decorated.activePerCapita * 239);
+          decorated.content =
+            '<b>' + postcode + data[glid].place + ', ' + data[glid].state + '</b><br>Population: ' + population + '<br>Total Cases: ' + data[glid].cases + '<br>Active Cases: ' + activeCases + '<br>% of residents infected (total): ' + Math.round(casesPerCapita * 100) / 100 + '%<br>% of residents infectious (active): ' + Math.round(activePerCapita * 100) / 100 + '%';
+        } else if (population !== 'Unknown' && this.selectedColourMetric.value === 'totalPerCap') {
+          decorated.casesPerCapita = casesPerCapita = (data[glid].cases / population) * 100;
+          decorated.colourIndex = Math.ceil(decorated.casesPerCapita * 239) > 239 ? 239 : Math.ceil(decorated.casesPerCapita * 239);
+          decorated.content = '<b>' + postcode + data[glid].place + ', ' + data[glid].state + '</b><br>Population: ' + population + '<br>Total Cases: ' + data[glid].cases + '<br>% of residents infected (total): ' + Math.round(casesPerCapita * 100) / 100 + '%';
+        } else if (activeCases !== 'Unknown' && this.selectedColourMetric.value === 'activeHighest') {
+          decorated.content = '<b>' + postcode + data[glid].place + ', ' + data[glid].state + '</b><br>Population: ' + population + '<br>Total Cases: ' + data[glid].cases + '<br>Active Cases: ' + data[glid].active;
+          decorated.colourIndex = Math.ceil((activeCases / data.highest_active_cases) * 239);
+        } else if (this.selectedColourMetric.value === 'relativeHighest') {
+          decorated.content = '<b>' + postcode + data[glid].place + ', ' + data[glid].state + '</b><br>Population: ' + population + '<br>Total Cases: ' + data[glid].cases;
+          decorated.colourIndex = Math.ceil((data[glid].cases / data.highest_cases) * 239);
+        } else {
+          decorated.content = '<b>' + postcode + data[glid].place + ', ' + data[glid].state + '</b><br>Population: ' + population + '<br>Total Cases: ' + data[glid].cases;
+          // this.selectedColourMetric = this.defaultColourMetric;
+          decorated.colourIndex = Math.ceil((data[glid].cases / data.highest_cases) * 239);
+        }
+        return decorated;
+      },
+      showSpinner() {
+        // console.log('showing spinner: ' + this.spinnerStackDepth);
+        this.displaySpinner = true;
+        this.spinnerStackDepth++;
+      },
+      hideSpinner() {
+        // console.log('hiding spinner: ' + this.spinnerStackDepth);
+        this.spinnerStackDepth--;
+        if (this.spinnerStackDepth < 1) {
+          this.displaySpinner = false;
+          this.message = 'Data load complete.';
+          this.spinnerStackDepth = 0;
+        }
+      },
+      showSpinnerTemporarily(timeout) {
+        var timeoutMs = timeout ? timeout : 1000;
+        this.showSpinner();
+        setTimeout(this.hideSpinner, timeoutMs);
+      },
+      geolocateUser() {
+        console.log('doing geolocateUser');
+        var me = this;
+        //do we support geolocation
+        if (localStorage.startingMapCentre) {
+          setTimeout(function() {
+            me.$refs.map.mapObject.setView(JSON.parse(localStorage.startingMapCentre), Number(localStorage.startingMapZoom), {
+              duration: 0.1,
+            });
+            me.hideSpinner();
+            me.message = 'Successfully located from session, loading data...';
+          }, 20);
+        } else if ('geolocation' in navigator) {
+          this.showSpinnerTemporarily(3000);
+          this.message = 'Geolocating you...';
+          this.gettingLocation = true;
+          // get position
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              this.gettingLocation = false;
+              this.usersLocation = latLng(pos.coords.latitude, pos.coords.longitude);
+              setTimeout(function() {
+                me.$refs.map.mapObject.setView(me.usersLocation, 9, {
+                  duration: 0.1,
+                });
+                me.hideSpinner();
+                me.message = 'Successfully geolocated, loading data...';
+              }, 10);
+            },
+            (err) => {
+              this.gettingLocation = false;
+              console.log('Got an error when geolocating, perhaps Safari being annoying...');
+              console.log(err);
+              setTimeout(function() {
+                me.$refs.map.mapObject.setView(me.mapCentre, me.mapZoom, {
+                  duration: 0.1,
+                });
+                me.hideSpinner();
+                me.message = 'Geolocation failed! Setting default location.';
+              }, 10);
+            }
+          );
+        } else {
+          console.log('Geolocation is not available.');
+        }
+      },
     },
-    created() {
-      var me = this;
-      //do we support geolocation
-      if ('geolocation' in navigator) {
-        this.gettingLocation = true;
-        // get position
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            this.gettingLocation = false;
-            this.usersLocation = latLng(pos.coords.latitude, pos.coords.longitude);
-            setTimeout(function() {
-              me.$refs.map.mapObject.setView(me.usersLocation, 9, {
-                duration: 0.1,
-              });
-            }, 2000);
-          },
-          (err) => {
-            this.gettingLocation = false;
-            console.log('Got an error when geolocating, perhaps Safari being annoying...');
-            console.log(err);
-            setTimeout(function() {
-              me.$refs.map.mapObject.setView(me.mapCentre, me.mapZoom, {
-                duration: 0.1,
-              });
-            }, 2000);
-          }
-        );
-      } else {
-        console.log('Geolocation is not available.');
-      }
-    },
+    created() {},
     mounted() {
       var me = this;
       this.setMapHeight();
-      this.$refs.map.mapObject.on('load', function() {
-        me.zoomUpdate(me.mapZoom);
-      });
       window.addEventListener('resize', function() {
         me.setMapHeight();
       });
-
       for (let i = 0; i < 80; i++) {
         this.dataColorLookup.push(rgbToHex((255 / 80) * i, 240, 0));
       }
       for (let i = 0; i < 160; i++) {
         this.dataColorLookup.push(rgbToHex(255, 240 - Math.ceil((240 / 160) * i), 0));
       }
-      // for (let i = 0; i < 80; i++) {
-      //   this.dataColorLookup.push(rgbToHex(200 + Math.ceil((55 / 80) * i), 0, 0));
-      // }
+
       let dateChangeFunc = function() {
         me.getPlaceData();
       };
@@ -1083,7 +1169,6 @@
         me.updatePolygons();
         me.calculateChangesBetweenDates();
       };
-      console.log(this.$route.query.groupType);
       var groupIndex = parseInt(this.$route.query.groupType);
       if (groupIndex > -1 && groupIndex < this.groupTypesArray.length) {
         this.selectedGroupType = this.groupTypesArray[groupIndex];
@@ -1094,14 +1179,14 @@
       document.removeEventListener('LOCATIONS_LOADED', this.getStates);
       document.removeEventListener('STATES_LOADED', this.getPlaceData);
       document.removeEventListener('DATE_CHANGED', dateChangeFunc);
-      document.removeEventListener('INIT_COMPLETE', dateChangeFunc);
+      document.removeEventListener('INIT_COMPLETE', this.geolocateUser);
       document.addEventListener('DATES_LOADED', this.getLocations);
       document.addEventListener('LOCATIONS_LOADED', this.getStates);
       document.addEventListener('PLACE_DATA_LOADED', this.getPostcodeData);
       document.addEventListener('ALL_DATA_LOADED', dataLoadedFunction);
       document.addEventListener('STATES_LOADED', this.getPlaceData);
       document.addEventListener('DATE_CHANGED', dateChangeFunc);
-      document.addEventListener('INIT_COMPLETE', dateChangeFunc);
+      document.addEventListener('INIT_COMPLETE', this.geolocateUser);
       this.$nextTick(() => {
         this.getDates();
       });
@@ -1137,7 +1222,7 @@
     background-color: red;
     border-radius: 40px;
   }
-  .v-select {
+  /* .v-select {
     background: white;
     color: black;
     text-align: left;
@@ -1149,21 +1234,21 @@
     margin-top: 2px;
     color: black;
     z-index: 1000;
-  }
+  } */
   .leaflet-div-icon {
     border-radius: 20px;
     background: #fd0000;
     border: 1px solid #666;
     color: white;
   }
-  .vue-dynamic-select .search {
+  /* .vue-dynamic-select .search {
     width: auto;
   }
   .vue-dynamic-select .result-list {
     overflow: scroll;
     background-color: #fff;
     max-height: 50vh;
-  }
+  } */
   .leaflet-control-geosearch .results > * {
     color: black;
   }
@@ -1254,5 +1339,19 @@
   }
   .pop-size-large {
     font-size: 160%;
+  }
+  .message {
+    color: black;
+    padding-left: 20px;
+    padding-top: 7px;
+  }
+  .vs__dropdown-menu {
+    background: white;
+    border: none;
+    color: black;
+  }
+  .vs__dropdown-toggle {
+    background: white;
+    margin-top: 2px;
   }
 </style>

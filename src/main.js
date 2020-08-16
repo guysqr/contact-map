@@ -3,7 +3,6 @@ import App from "./App.vue";
 import {
   Amplify
 } from "aws-amplify";
-// import { * as AmplifyModules }  from "aws-amplify";
 import {
   AmplifyPlugin
 } from "aws-amplify-vue";
@@ -32,7 +31,7 @@ import {
 } from '@fortawesome/vue-fontawesome'
 import L from 'leaflet';
 require('leaflet/dist/leaflet.css');
-// import Snotify from 'vue-snotify';
+import GridLoader from 'vue-spinner/src/GridLoader.vue';
 
 // FIX leaflet's default icon path problems with webpack
 delete L.Icon.Default.prototype._getIconUrl;
@@ -46,6 +45,7 @@ Vue.component("l-map", LMap);
 Vue.component("l-tile-layer", LTileLayer);
 Vue.component("l-marker", LMarker);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
+Vue.component('pulse-loader', GridLoader);
 
 library.add(faAngleDoubleRight);
 library.add(faAngleDoubleLeft);
