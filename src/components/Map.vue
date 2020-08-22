@@ -3,13 +3,13 @@
     <div id="ControlPanel" class="control-panel">
       <!-- <div class="control-panel-label">State:</div>
       <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select>-->
-      <div class="control-panel-label">Date:</div>
+      <div v-if="notMobile" class="control-panel-label">Date:</div>
       <vue-select :clearable="false" :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 13em"></vue-select>
       <!-- <div class="control-panel-label">Area:</div>
       <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>-->
-      <div class="control-panel-label">Grouping:</div>
+      <div v-if="notMobile" class="control-panel-label">Grouping:</div>
       <vue-select :clearable="false" :options="groupTypesArray" v-model="selectedGroupType" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 10em"></vue-select>
-      <div class="control-panel-label">Colour Metric:</div>
+      <div v-if="notMobile" class="control-panel-label">Colour Metric:</div>
       <vue-select :clearable="false" :options="colourMetricsArray" v-model="selectedColourMetric" @input="showPolygonsInView(true)" option-value="value" option-text="label" placeholder="type to search" style="width: 20em"></vue-select>
       <span class="message">{{ message }}</span>
       <!-- <div class="control-panel-label">View:</div>
@@ -18,11 +18,11 @@
     <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" ref="map" style="width:100%; height: 100vh; z-index: 100">
       <!--      @click="showDataUnderClick"-->
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @mouseover="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @mouseover="showGeojsonPopup(g, 500)" @mousedown="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
 
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
-      <l-control position="bottomright" style="z-index: 760">
+      <l-control position="bottomright" style="z-index: 760" v-if="notMobile">
         <div class="vue-dropzone dropzone" style="padding:10px 16px">
           <div class="button-label">Step by day</div>
           <button @click="prevDate" style="padding:5px">
@@ -33,11 +33,11 @@
           </button>
         </div>
       </l-control>
-      <l-control position="bottomright" style="z-index: 760">
+      <l-control position="bottomright" style="z-index: 760" v-if="notMobile">
         <!-- map based controls go here -->
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
-      <l-draw-toolbar position="topleft" />
+      <l-draw-toolbar v-if="notMobile" position="topleft" />
       <l-polyline v-for="p in filteredTrackData" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :weight="p.style.weight" :options="{ pane: 'shadowPane' }">
         <l-tooltip :options="{ permanent: false, interactive: true }">
           <strong>Activity:</strong>
@@ -81,7 +81,9 @@
   import vue2Dropzone from 'vue2-dropzone';
   import 'vue2-dropzone/dist/vue2Dropzone.min.css';
   import Vue from 'vue';
-
+  import device from 'vue-device-detector';
+  Vue.use(device);
+  console.log(Vue.$device);
   export default {
     name: 'MapPanel',
     components: {
@@ -154,6 +156,7 @@
       }
 
       return {
+        notMobile: !Vue.$device.mobile,
         initComplete: false,
         displaySpinner: true,
         spinnerStackDepth: 0,
@@ -246,6 +249,7 @@
         lastMapClickLoc: null,
         selectedDate: { label: 'Latest', value: 'latest' },
         selectedIsoDate: null,
+        previousDate: null,
         previousIsoDate: null,
         usersLocation: null,
         gettingLocation: false,
@@ -403,29 +407,33 @@
       hidePopup() {
         this.geoJsonPopup.remove();
       },
-      showGeojsonPopup(geojson) {
+      showGeojsonPopup(geojson, delay) {
+        delay = delay ? delay : 0;
         this.glidWithPopup = geojson.id;
         var content = geojson.content;
         for (var i = 0; i < this.dataDiffsArray.length; i++) {
           if (this.dataDiffsArray[i].glid === 'diff-' + geojson.id) {
-            content += '<br>Difference: ' + this.dataDiffsArray[i].diff;
+            content += '<br>Difference: ' + this.dataDiffsArray[i].diff + ' between ' + this.dataDiffsArray[i].dates.replace(/ 2020/g,'');
           }
         }
-        this.geoJsonPopup = L.popup({
-          closeButton: false,
-          autoPan: false,
-          offset: [0, -20],
-        })
-          .setLatLng(geojson.latlng)
-          .setContent(content)
-          .openOn(this.$refs.map.mapObject);
+        var me = this;
+        setTimeout(function() {
+          me.geoJsonPopup = L.popup({
+            closeButton: false,
+            autoPan: false,
+            offset: [0, -20],
+          })
+            .setLatLng(geojson.latlng)
+            .setContent(content)
+            .openOn(me.$refs.map.mapObject);
+        }, delay);
       },
       refreshGeojsonPopup() {
         if (this.geoJsonPopup && this.glidWithPopup && Object.prototype.hasOwnProperty.call(this.caseDataLookup, this.glidWithPopup + '-' + this.selectedIsoDate)) {
           var content = this.caseDataLookup[this.glidWithPopup + '-' + this.selectedIsoDate].content;
           for (var i = 0; i < this.dataDiffsArray.length; i++) {
             if (this.dataDiffsArray[i].glid === 'diff-' + this.glidWithPopup) {
-              content += '<br>Difference: ' + this.dataDiffsArray[i].diff;
+              content += '<br>Difference: ' + this.dataDiffsArray[i].diff + ' between ' + this.dataDiffsArray[i].dates.replace(/ 2020/g,'');
             }
           }
           this.geoJsonPopup.setContent(content);
@@ -758,9 +766,9 @@
         });
       },
       setMapHeight() {
-        var heightString = window.innerHeight - document.getElementById('ControlPanel').offsetHeight - document.getElementById('AppHeader').offsetHeight - document.getElementById('AppFooter').offsetHeight + 'px';
+        var footerHeight = document.getElementById('AppFooter') ? document.getElementById('AppFooter').offsetHeight : 0;
+        var heightString = window.innerHeight - document.getElementById('ControlPanel').offsetHeight - document.getElementById('AppHeader').offsetHeight - footerHeight + 'px';
         document.getElementById('map').style.height = heightString;
-        //document.getElementById('Navigation').offsetHeight -
       },
       getLocations() {
         var me = this;
@@ -857,10 +865,12 @@
           });
       },
       setDateFromIso(isodate) {
+        this.selectedDate = this.getDateFromIso(isodate);
+      },
+      getDateFromIso(isodate) {
         for (var i = 0; i < this.datesArray.length; i++) {
-          if (dateFormat(this.datesArray[i].value) === isodate) {
-            this.selectedDate = this.datesArray[i];
-            return;
+          if (dateFormat(this.datesArray[i].value) === dateFormat(isodate)) {
+            return this.datesArray[i];
           }
         }
         console.log(isodate + ' not found');
@@ -870,6 +880,7 @@
           return;
         }
         this.previousIsoDate = this.selectedIsoDate;
+        this.previousDate = this.getDateFromIso(this.previousIsoDate);
         if (obj.value === 'latest') {
           this.selectedIsoDate = this.datesArray[1].value; //swap for first real date
         } else {
@@ -894,6 +905,7 @@
                   glid: 'diff-' + glid,
                   latlng: this.geoJsonStatusLookup[glid].geojsonObj.latlng,
                   diff: this.caseDataLookup[glid + '-' + to].value - this.caseDataLookup[glid + '-' + from].value,
+                  dates: this.previousDate.label + ' &amp; ' + this.selectedDate.label,
                 });
               } else {
                 console.log('data diff for ' + glid + '=0');
@@ -1078,6 +1090,7 @@
           // this.selectedColourMetric = this.defaultColourMetric;
           decorated.colourIndex = Math.ceil((data[glid].cases / data.highest_cases) * 239);
         }
+        decorated.content = '<b>' + this.selectedDate.label + '</b><br>' + decorated.content;
         return decorated;
       },
       showSpinner() {
@@ -1149,7 +1162,9 @@
     created() {},
     mounted() {
       var me = this;
+
       this.setMapHeight();
+
       window.addEventListener('resize', function() {
         me.setMapHeight();
       });
@@ -1265,6 +1280,7 @@
     padding: 2px;
     z-index: 10000;
     display: flex;
+    height: 2.4em;
   }
   .leaflet-toolbar-0 > li > .leaflet-toolbar-icon {
     width: 26px !important;
@@ -1342,8 +1358,9 @@
   }
   .message {
     color: black;
-    padding-left: 20px;
+    padding-left: 10px;
     padding-top: 7px;
+    white-space: nowrap;
   }
   .vs__dropdown-menu {
     background: white;
@@ -1353,5 +1370,12 @@
   .vs__dropdown-toggle {
     background: white;
     margin-top: 2px;
+    height: 2em;
+  }
+  .vs__selected {
+    white-space: nowrap;
+  }
+  .vs__search {
+    display: none;
   }
 </style>
