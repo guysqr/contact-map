@@ -32,6 +32,7 @@ import {
 import L from 'leaflet';
 require('leaflet/dist/leaflet.css');
 import GridLoader from 'vue-spinner/src/GridLoader.vue';
+import './registerServiceWorker'
 
 // FIX leaflet's default icon path problems with webpack
 delete L.Icon.Default.prototype._getIconUrl;
