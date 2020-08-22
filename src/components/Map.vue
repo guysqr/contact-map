@@ -4,7 +4,7 @@
       <!-- <div class="control-panel-label">State:</div>
       <dynamic-select :options="statesArray" v-model="selectedState" @input="setState" option-value="value" option-text="label" style="width: 15em;"></dynamic-select>-->
       <div v-if="notMobile" class="control-panel-label">Date:</div>
-      <vue-select :clearable="false" :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 13em"></vue-select>
+      <vue-select :clearable="false" :options="datesArray" v-model="selectedDate" @input="setDate" option-value="value" option-text="label" style="width: 9em"></vue-select>
       <!-- <div class="control-panel-label">Area:</div>
       <dynamic-select :options="locationsArray" @input="setMapLocation" option-value="value" option-text="label" placeholder="type to search" style="width: 22em"></dynamic-select>-->
       <div v-if="notMobile" class="control-panel-label">Grouping:</div>
@@ -18,7 +18,7 @@
     <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" ref="map" style="width:100%; height: 100vh; z-index: 100">
       <!--      @click="showDataUnderClick"-->
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @mouseover="showGeojsonPopup(g, 500)" @mousedown="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @click="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
 
       <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
       <v-geosearch :options="geosearchOptions"></v-geosearch>
@@ -123,8 +123,8 @@
       var colourMetricsArray = [
         { label: 'Total Cases', value: 'relativeHighest' },
         { label: 'Active Cases', value: 'activeHighest' },
-        { label: 'Total Cases per Capita', value: 'totalPerCap' },
-        { label: 'Active Cases per Capita', value: 'activePerCap' },
+        { label: 'Totals per Capita', value: 'totalPerCap' },
+        { label: 'Active per Capita', value: 'activePerCap' },
       ];
 
       var startingColourMetric = colourMetricsArray[0];
@@ -406,39 +406,44 @@
       },
       hidePopup() {
         this.geoJsonPopup.remove();
+        this.glidWithPopup = null;
       },
-      showGeojsonPopup(geojson, delay) {
-        delay = delay ? delay : 0;
+      showGeojsonPopup(geojson) {
+        if (this.glidWithPopup === geojson.id) {
+          this.hidePopup();
+          return;
+        }
+        // delay = delay ? delay : 0;
         this.glidWithPopup = geojson.id;
         var content = geojson.content;
         for (var i = 0; i < this.dataDiffsArray.length; i++) {
           if (this.dataDiffsArray[i].glid === 'diff-' + geojson.id) {
-            content += '<br>Difference: ' + this.dataDiffsArray[i].diff + ' between ' + this.dataDiffsArray[i].dates.replace(/ 2020/g,'');
+            content += '<br>Difference: ' + this.dataDiffsArray[i].diff + ' between ' + this.dataDiffsArray[i].dates.replace(/ 2020/g, '');
           }
         }
         var me = this;
-        setTimeout(function() {
-          me.geoJsonPopup = L.popup({
-            closeButton: false,
-            autoPan: false,
-            offset: [0, -20],
-          })
-            .setLatLng(geojson.latlng)
-            .setContent(content)
-            .openOn(me.$refs.map.mapObject);
-        }, delay);
+        // setTimeout(function() {
+        me.geoJsonPopup = L.popup({
+          closeButton: true,
+          autoPan: false,
+          offset: [0, -20],
+        })
+          .setLatLng(geojson.latlng)
+          .setContent(content)
+          .openOn(me.$refs.map.mapObject);
+        // }, delay);
       },
       refreshGeojsonPopup() {
         if (this.geoJsonPopup && this.glidWithPopup && Object.prototype.hasOwnProperty.call(this.caseDataLookup, this.glidWithPopup + '-' + this.selectedIsoDate)) {
           var content = this.caseDataLookup[this.glidWithPopup + '-' + this.selectedIsoDate].content;
           for (var i = 0; i < this.dataDiffsArray.length; i++) {
             if (this.dataDiffsArray[i].glid === 'diff-' + this.glidWithPopup) {
-              content += '<br>Difference: ' + this.dataDiffsArray[i].diff + ' between ' + this.dataDiffsArray[i].dates.replace(/ 2020/g,'');
+              content += '<br>Difference: ' + this.dataDiffsArray[i].diff + ' between ' + this.dataDiffsArray[i].dates.replace(/ 2020/g, '');
             }
           }
           this.geoJsonPopup.setContent(content);
         } else if (this.geoJsonPopup) {
-          this.geoJsonPopup.remove();
+          this.hidePopup();
           this.glidWithPopup = null;
         }
       },
