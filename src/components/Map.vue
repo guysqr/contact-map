@@ -771,6 +771,7 @@
         });
       },
       setMapHeight() {
+        console.log('setting map height');
         var footerHeight = document.getElementById('AppFooter') ? document.getElementById('AppFooter').offsetHeight : 0;
         var heightString = window.innerHeight - document.getElementById('ControlPanel').offsetHeight - document.getElementById('AppHeader').offsetHeight - footerHeight + 'px';
         document.getElementById('map').style.height = heightString;
@@ -1121,7 +1122,7 @@
         console.log('doing geolocateUser');
         var me = this;
         //do we support geolocation
-        if (localStorage.startingMapCentre) {
+        if (localStorage.startingMapCentre && localStorage.startingMapZoom) {
           setTimeout(function() {
             me.$refs.map.mapObject.setView(JSON.parse(localStorage.startingMapCentre), Number(localStorage.startingMapZoom), {
               duration: 0.1,
@@ -1173,6 +1174,11 @@
       window.addEventListener('resize', function() {
         me.setMapHeight();
       });
+
+      window.addEventListener('orientationchange', function() {
+        me.setMapHeight();
+      });
+
       for (let i = 0; i < 80; i++) {
         this.dataColorLookup.push(rgbToHex((255 / 80) * i, 240, 0));
       }

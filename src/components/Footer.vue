@@ -2,7 +2,7 @@
   <footer v-if="notMobile" id="AppFooter">
     <div class="attribution">
       Contact Map is an open source project and can be
-      <a class="white" href="https://github.com/guysqr/contact-map" target="_blank">forked on Github</a>. The <a class="white" href="https://developers.contactmap.me/" target="_blank">APIs</a> are also available for other developers to use free of charge for public-facing projects (see terms of use).
+      <a class="white" rel="noopener" href="https://github.com/guysqr/contact-map" target="_blank">forked on Github</a>. The <a class="white" rel="noopener" href="https://developers.contactmap.me/" target="_blank">APIs</a> are also available for other developers to use free of charge for public-facing projects (see terms of use).
     </div>
   </footer>
 </template>
@@ -19,9 +19,7 @@
         notMobile: !Vue.$device.mobile,
       };
     },
-    methods: {
-
-    },
+    methods: {},
   };
 </script>
 <style scoped>
