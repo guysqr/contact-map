@@ -430,7 +430,7 @@
         })
           .setLatLng(geojson.latlng)
           .setContent(content)
-          .openOn(me.$refs.map.mapObject);
+          .openOn(me.$refs.map.mapObject).bringToFront();
         // }, delay);
       },
       refreshGeojsonPopup() {
@@ -949,7 +949,7 @@
               })
                 .setLatLng(this.dataDiffsArray[i].latlng)
                 .setContent('' + this.dataDiffsArray[i].diff)
-                .addTo(this.$refs.map.mapObject)
+                .addTo(this.$refs.map.mapObject).bringToBack()
             );
           }
         }
