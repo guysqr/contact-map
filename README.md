@@ -10,7 +10,7 @@ Live site: https://contactmap.me/
 
 This project is built using AWS Amplify. To run this application locally you will need to clone this repo and configure your local environment as per the guide here https://docs.amplify.aws/start/q/integration/vue
 
-<img src="public/img/screenshot-smaller.jpg">
+<img src="assets/demo.png">
 
 As part of this work an Open API for COVID-19 data for Australia was developed. It provides a standard way to get data by date with the best precision that has been made available by the various authorities. There are also APIs for getting location information, eg bounding boxes and polygons of the areas to which the data relates.
 
