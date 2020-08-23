@@ -18,11 +18,11 @@
     <l-map id="map" v-if="showMap" :zoom="mapZoom" :center="mapCentre" :options="mapOptions" @update:center="centerUpdate" @update:zoom="zoomUpdate" ref="map" style="width:100%; height: 100vh; z-index: 100">
       <!--      @click="showDataUnderClick"-->
       <l-tile-layer :url="url" :attribution="attribution" />
+      <l-control-scale position="topright" :imperial="false" :metric="true" :options="{ pane: 'shadowPane' }"></l-control-scale>
       <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @click="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
 
-      <l-control-scale position="topright" :imperial="false" :metric="true"></l-control-scale>
-      <v-geosearch :options="geosearchOptions"></v-geosearch>
-      <l-control position="bottomright" style="z-index: 760" v-if="notMobile">
+      <v-geosearch :options="geosearchOptions" style="z-index: 660"></v-geosearch>
+      <l-control position="bottomright" style="z-index: 660" v-if="notMobile">
         <div class="vue-dropzone dropzone" style="padding:10px 16px">
           <div class="button-label">Step by day</div>
           <button @click="prevDate" style="padding:5px">
@@ -33,7 +33,7 @@
           </button>
         </div>
       </l-control>
-      <l-control position="bottomright" style="z-index: 760" v-if="notMobile">
+      <l-control position="bottomright" style="z-index: 660" v-if="notMobile">
         <!-- map based controls go here -->
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
@@ -395,8 +395,10 @@
       centerUpdate(center) {
         if (this.mapCentre !== center) {
           this.mapCentre = center;
-          localStorage.startingMapCentre = JSON.stringify(this.mapCentre);
-          this.showPolygonsInView();
+          if (this.initComplete) {
+            localStorage.startingMapCentre = JSON.stringify(this.mapCentre);
+            this.showPolygonsInView();
+          }
         } else {
           console.log("center hasn't changed");
         }
@@ -1282,7 +1284,7 @@
     color: black;
   }
   .leaflet-control {
-    z-index: 2000;
+    /* z-index: 2000; */
   }
   .control-panel-label {
     padding: 8px 10px;
@@ -1292,7 +1294,7 @@
   .control-panel {
     background-color: #beccda;
     padding: 2px;
-    z-index: 10000;
+    /* z-index: 10000; */
     display: flex;
     height: 2.4em;
   }
