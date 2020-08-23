@@ -18,6 +18,10 @@ This project is built using AWS Amplify. To run this application locally you wil
 
 As part of this work an Open API for COVID-19 data for Australia was developed. It provides a standard way to get data by date with the best precision that has been made available by the various authorities. There are also APIs for getting location information, eg bounding boxes and polygons of the areas to which the data relates.
 
+## Supporters
+
+This project was made possible with generous support from [AWS](https://aws.amazon.com/), [AC3](https://www.ac3.com/) and [Mapbox](https:///mapbox.com/).
+
 ## Project setup
 
 ```
@@ -25,12 +29,6 @@ yarn install
 ```
 
 ### Compiles and hot-reloads for development
-
-```
-yarn serve
-```
-
-or
 
 ```
 amplify serve
@@ -47,6 +45,10 @@ yarn build
 ```
 yarn lint
 ```
+
+### Deploy
+
+Deployments are triggered by pushes to git, which is part of the Amplify setup.
 
 ## Contributing
 
