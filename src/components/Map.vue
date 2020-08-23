@@ -294,7 +294,7 @@
           // Important part Here
           provider: new OpenStreetMapProvider(),
         },
-        geoJsonPopup: L.popup({ closeButton: false, autoPan: false }),
+        geoJsonPopup: L.popup({ closeButton: true, autoPan: true }),
         glidWithPopup: null,
       };
     },
@@ -425,7 +425,7 @@
         // setTimeout(function() {
         me.geoJsonPopup = L.popup({
           closeButton: true,
-          autoPan: false,
+          autoPan: true,
           offset: [0, -20],
         })
           .setLatLng(geojson.latlng)
