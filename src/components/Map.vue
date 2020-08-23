@@ -775,6 +775,7 @@
         var footerHeight = document.getElementById('AppFooter') ? document.getElementById('AppFooter').offsetHeight : 0;
         var heightString = window.innerHeight - document.getElementById('ControlPanel').offsetHeight - document.getElementById('AppHeader').offsetHeight - footerHeight + 'px';
         document.getElementById('map').style.height = heightString;
+        this.$refs.map.mapObject.invalidateSize();
       },
       getLocations() {
         var me = this;
@@ -1172,12 +1173,12 @@
       this.setMapHeight();
 
       window.addEventListener('resize', function() {
-        me.setMapHeight();
+        setTimeout(me.setMapHeight, 50);
       });
 
-      window.addEventListener('orientationchange', function() {
-        me.setMapHeight();
-      });
+      // window.addEventListener('orientationchange', function() {
+
+      // });
 
       for (let i = 0; i < 80; i++) {
         this.dataColorLookup.push(rgbToHex((255 / 80) * i, 240, 0));

@@ -8,8 +8,8 @@ module.exports = {
   },
   pwa: {
     name: 'Contact Map',
-    themeColor: '#4DBA87',
-    msTileColor: '#000000',
+    themeColor: '#2c3e50',
+    msTileColor: '#2c3e50',
     appleMobileWebAppCapable: 'yes',
     appleMobileWebAppStatusBarStyle: 'black',
 
