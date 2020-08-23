@@ -62,7 +62,7 @@
 
       <!-- <l-rectangle :bounds="mapBounds" :fill="false" :weight="0"></l-rectangle> -->
     </l-map>
-    <pulse-loader v-if="displaySpinner" color="#2c3e50" radius="200%" size="25px" margin="10px" style="position: absolute; top: calc(50vh - 50px); margin-left: calc(50vw - 50px); z-index: 2001;"></pulse-loader>
+    <pulse-loader v-if="displaySpinner" color="rgba(0,0,0,0.3)" radius="100%" size="20px" margin="5px" style="position: absolute; top: calc(50vh - 50px); margin-left: calc(50vw - 45px); z-index: 2001;"></pulse-loader>
   </div>
 </template>
 
@@ -430,7 +430,8 @@
         })
           .setLatLng(geojson.latlng)
           .setContent(content)
-          .openOn(me.$refs.map.mapObject).bringToFront();
+          .openOn(me.$refs.map.mapObject)
+          .bringToFront();
         // }, delay);
       },
       refreshGeojsonPopup() {
@@ -711,7 +712,7 @@
       },
       updatePolygons() {
         console.log('running updatePolygons');
-        this.showSpinnerTemporarily(3000);
+        // this.showSpinnerTemporarily(3000);
         // let newArray = [];
         //if this has been hidden during a previous update, add it back to test it again
         for (let glid in this.geoJsonStatusLookup) {
@@ -767,7 +768,7 @@
         this.$nextTick(() => {
           this.hideHiddenPolygons();
           this.refreshGeojsonPopup();
-          this.hideSpinner();
+          // this.hideSpinner();
         });
       },
       setMapHeight() {
@@ -949,7 +950,8 @@
               })
                 .setLatLng(this.dataDiffsArray[i].latlng)
                 .setContent('' + this.dataDiffsArray[i].diff)
-                .addTo(this.$refs.map.mapObject).bringToBack()
+                .addTo(this.$refs.map.mapObject)
+                .bringToBack()
             );
           }
         }
