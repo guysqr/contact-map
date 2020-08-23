@@ -1,32 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title><%= htmlWebpackPlugin.options.title %></title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@2.6.0/assets/css/leaflet.css">
-    <style>
-      body {
-        padding: 0;
-        margin: 0;
-      }
-      html, body, #app {
-        height: 100%;
-        width: 100vw;
-        margin: 0px;
-      }
-      h1, p, ul.navbar-nav {
-        margin: 0px;
-      }
-    </style>
-  </head>
-  <body>
-    <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+  <title><%= htmlWebpackPlugin.options.title %></title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@2.6.0/assets/css/leaflet.css">
+  <link rel="icon" type="image/png" href="<%= BASE_URL %>/img/icons/favicon-16x16.png" sizes="16x16">
+  <link rel="icon" type="image/png" href="<%= BASE_URL %>/img/icons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="<%= BASE_URL %>/img/icons/android-192x192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="<%= BASE_URL %>/img/icons/apple-touch-icon-180x180.png" sizes="180x180">
+  <meta name="msapplication-config" content="/img/icons/browserconfig.xml">
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    html,
+    body,
+    #app {
+      height: 100%;
+      width: 100vw;
+      margin: 0px;
+    }
+
+    h1,
+    p,
+    ul.navbar-nav {
+      margin: 0px;
+    }
+  </style>
+</head>
+
+<body>
+  <noscript>
+    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+      Please enable it to continue.</strong>
+  </noscript>
+  <div id="app"></div>
+  <!-- built files will be auto injected -->
+</body>
+
 </html>
