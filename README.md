@@ -4,6 +4,10 @@
 
 Contact Map allows users to anonymously upload their Google Takeout Semantic Location History json files, then display the data on the map, correlated to the times and locations for which COVID-19 data is available. A "step-through" feature allows the user to see the data change over time and how their locations appear in relation to those changes.
 
+If you want to try uploading your own Google location data, the files you need are under “Semantic Location History”. Select 2020 and the month you’d like to view. There's more about the project here: https://medium.com/@guymorton/covid-and-chaos-52a07b28f455
+
+<img src="assets/semantic.png" width="50%">
+
 Using Contact Map you can see how many cases had been recorded in the places you've been, at the time you were there. If you don't have Google location data, you can still use Contact Map to review changes to COVID-19 statistics by location over time.
 
 Live site: https://contactmap.me/
