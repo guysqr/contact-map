@@ -2,6 +2,11 @@
 
 const awsmobile = {
     "aws_project_region": "ap-southeast-2",
+    "aws_cognito_identity_pool_id": "ap-southeast-2:b63efb51-a0dd-4f7d-b822-ec72850ac351",
+    "aws_cognito_region": "ap-southeast-2",
+    "aws_user_pools_id": "ap-southeast-2_0AOgTYr9K",
+    "aws_user_pools_web_client_id": "1np5cqbfhpmedh9oopcro54jh4",
+    "oauth": {},
     "aws_content_delivery_bucket": "vue-contact-map-20200413075831-hostingbucket-proto",
     "aws_content_delivery_bucket_region": "ap-southeast-2",
     "aws_content_delivery_url": "https://d3jsszy9vmlhyj.cloudfront.net",

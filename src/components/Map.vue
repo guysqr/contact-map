@@ -82,8 +82,35 @@
   import 'vue2-dropzone/dist/vue2Dropzone.min.css';
   import Vue from 'vue';
   import device from 'vue-device-detector';
+  import Analytics from '@aws-amplify/analytics';
+  import Auth from '@aws-amplify/auth';
+
+  const amplifyConfig = {
+    Auth: {
+      identityPoolId: 'ap-southeast-2:02653fea-9a5c-4f23-988d-515a807e6fdc',
+      region: 'ap-southeast-2',
+    },
+  };
+  //Initialize Amplify
+  Auth.configure(amplifyConfig);
+
+  const analyticsConfig = {
+    AWSPinpoint: {
+      // Amazon Pinpoint App Client ID
+      appId: 'b6a323ab2b56450aa01f1efacdeaf9ee',
+      // Amazon service region
+      region: 'us-west-2',
+      mandatorySignIn: false,
+    },
+  };
+
+  Analytics.configure(analyticsConfig);
+
+  //Record an event
+  Analytics.record('loading');
+
   Vue.use(device);
-  console.log(Vue.$device);
+
   export default {
     name: 'MapPanel',
     components: {

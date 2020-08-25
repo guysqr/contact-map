@@ -1,5 +1,12 @@
 {
-	"auth": {},
+	"auth": {
+		"vuecontactmap2334716f": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [],
+			"customAuth": false
+		}
+	},
 	"hosting": {
 		"amplifyhosting": {
 			"service": "amplifyhosting",

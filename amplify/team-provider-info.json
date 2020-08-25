@@ -65,6 +65,9 @@
                     "appId": "d932atxapzkq",
                     "type": "cicd"
                 }
+            },
+            "auth": {
+                "vuecontactmap2334716f": {}
             }
         }
     }

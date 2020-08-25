@@ -14,6 +14,11 @@
   import ContentPanel from '@/components/ContentPanel';
   import AppFooter from '@/components/Footer';
 
+  // //Record a custom event
+  // Analytics.record({
+  //   name: 'Album',
+  //   attributes: { genre: 'Rock', year: '1989' },
+  // });
   export default {
     name: 'app',
     components: {
