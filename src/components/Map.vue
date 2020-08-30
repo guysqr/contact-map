@@ -21,8 +21,8 @@
       <l-control-scale position="topright" :imperial="false" :metric="true" :options="{ pane: 'shadowPane' }"></l-control-scale>
       <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @click="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
 
-      <v-geosearch :options="geosearchOptions" style="z-index: 660"></v-geosearch>
-      <l-control position="bottomright" style="z-index: 660" v-if="notMobile">
+      <v-geosearch :options="geosearchOptions" class="leaflet-bar leaflet-control"></v-geosearch>
+      <l-control position="bottomright" v-if="notMobile">
         <div class="vue-dropzone dropzone" style="padding:10px 16px">
           <div class="button-label">Step by day</div>
           <button @click="prevDate" style="padding:5px">
@@ -33,13 +33,15 @@
           </button>
         </div>
       </l-control>
-      <l-control position="bottomright" style="z-index: 660" v-if="notMobile">
-        <!-- map based controls go here -->
+      <l-control position="bottomright" v-if="notMobile">
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
-      <l-control position="bottomleft">
-        <div>
-          <button class="dropzone" @click="linkToView" style="padding:5px"><font-awesome-icon icon="copy" class="fa-1x"></font-awesome-icon> Copy View <font-awesome-icon icon="eye" class="fa-1x"></font-awesome-icon></button>
+      <l-control position="topleft" style="padding: 0px; margin:0px">
+        <div style="padding: 0px; margin:0px">
+          <button @click="linkToView" @mouseover="hoveringOverCopy = true" @mouseout="hoverOut(3)" class="leaflet-bar leaflet-control" style="background-color: white; padding: 7px; color: black; border: none">
+            <font-awesome-icon icon="copy" class="fa-1x"></font-awesome-icon>
+            <span v-if="hoveringOverCopy" style="padding-left: 5px">Copy View</span> <font-awesome-icon icon="eye" v-if="hoveringOverCopy" class="fa-1x"></font-awesome-icon>
+          </button>
           <font-awesome-icon icon="check-circle" v-if="tickDisplayed" class="fa-2x" style="padding-left: 5px; color: green; margin-bottom: -5px"></font-awesome-icon>
         </div>
       </l-control>
@@ -190,8 +192,13 @@
       }
 
       return {
+        startingMapZoom: startingMapZoom,
+        startingMapCentre: startingMapCentre,
+        startingColourMetric: startingColourMetric,
+        startingGroupType: startingGroupType,
         notMobile: !Vue.$device.mobile,
         tickDisplayed: false,
+        hoveringOverCopy: true,
         initComplete: false,
         displaySpinner: true,
         spinnerStackDepth: 0,
@@ -345,6 +352,12 @@
         //   this.showHeatmap = false;
         //   this.showMarkers = true;
         // }
+      },
+      hoverOut(sec) {
+        var me = this;
+        setTimeout(function() {
+          me.hoveringOverCopy = false;
+        }, sec * 1000);
       },
       handleData(file, response) {
         //console.log(response);
@@ -1103,7 +1116,7 @@
       },
       linkToView() {
         var me = this;
-        if (copy('https://contactmap.me/#/?date=')) {
+        if (copy('https://contactmap.me/#/?date=' + this.selectedIsoDate + '&zoom=' + this.startingMapZoom + '&center=' + JSON.stringify(this.startingMapCentre) + '&type=' + this.startingGroupType.value)) {
           // alert('copied');
           this.tickDisplayed = true;
           setTimeout(function() {
@@ -1178,6 +1191,7 @@
               duration: 0.1,
             });
             me.hideSpinner();
+            me.hoverOut(5);
             me.message = 'Successfully located from session, loading data...';
           }, 20);
         } else if ('geolocation' in navigator) {
@@ -1193,6 +1207,7 @@
                 me.$refs.map.mapObject.setView(me.usersLocation, 9, {
                   duration: 0.1,
                 });
+                me.hoverOut(5);
                 me.hideSpinner();
                 me.message = 'Successfully geolocated, loading data...';
               }, 10);
@@ -1205,6 +1220,7 @@
                 me.$refs.map.mapObject.setView(me.mapCentre, me.mapZoom, {
                   duration: 0.1,
                 });
+                me.hoverOut(5);
                 me.hideSpinner();
                 me.message = 'Geolocation failed! Setting default location.';
               }, 10);
