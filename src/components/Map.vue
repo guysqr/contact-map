@@ -1440,4 +1440,7 @@
   .vs__search {
     display: none;
   }
+  .leaflet-left {
+    margin-bottom: 25px;
+  }
 </style>
