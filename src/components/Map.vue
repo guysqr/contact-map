@@ -147,10 +147,14 @@
       var corner1 = latLng(-44.522768, 160.471576);
       var corner2 = latLng(-8.44428, 110.060151);
       var maxMapBounds = latLngBounds(corner1, corner2);
-      var startingMapCentre = maxMapBounds.getCenter();
-      if (localStorage.startingMapCentre) {
+      var startingMapCentre = null;
+      if (this.$route.query.centre) {
+        var ll = this.$route.query.centre.split(',');
+        startingMapCentre = { lat: ll[0], lng: ll[1] };
+      } else if (localStorage.startingMapCentre) {
         startingMapCentre = JSON.parse(localStorage.startingMapCentre);
       }
+
       var startingMapZoom = 5;
       if (localStorage.startingMapZoom) {
         startingMapZoom = Number(localStorage.startingMapZoom);
@@ -194,6 +198,7 @@
       return {
         startingMapZoom: startingMapZoom,
         startingMapCentre: startingMapCentre,
+        defaultMapCentre: maxMapBounds.getCenter(),
         startingColourMetric: startingColourMetric,
         startingGroupType: startingGroupType,
         notMobile: !Vue.$device.mobile,
@@ -1116,7 +1121,7 @@
       },
       linkToView() {
         var me = this;
-        if (copy('https://contactmap.me/#/?date=' + this.selectedIsoDate + '&zoom=' + this.startingMapZoom + '&center=' + JSON.stringify(this.startingMapCentre) + '&type=' + this.startingGroupType.value)) {
+        if (copy('https://contactmap.me/#/?date=' + this.selectedIsoDate + '&glid=' + this.glidWithPopup + '&zoom=' + this.startingMapZoom + '&center=' + this.startingMapCentre.lat + ',' + this.startingMapCentre.lng + '&group=' + this.startingGroupType.value + '&metric=' + this.startingColourMetric.value)) {
           // alert('copied');
           this.tickDisplayed = true;
           setTimeout(function() {
@@ -1185,7 +1190,7 @@
         console.log('doing geolocateUser');
         var me = this;
         //do we support geolocation
-        if (localStorage.startingMapCentre && localStorage.startingMapZoom) {
+        if (this.startingMapCentre !== null) {
           setTimeout(function() {
             me.$refs.map.mapObject.setView(JSON.parse(localStorage.startingMapCentre), Number(localStorage.startingMapZoom), {
               duration: 0.1,
@@ -1227,6 +1232,15 @@
             }
           );
         } else {
+          setTimeout(function() {
+            me.$refs.map.mapObject.setView(this.defaultMapCentre, {
+              duration: 0.1,
+            });
+            me.hideSpinner();
+            me.hoverOut(5);
+            me.message = 'Default map, loading data...';
+          }, 20);
+          
           console.log('Geolocation is not available.');
         }
       },
