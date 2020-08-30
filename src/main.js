@@ -24,7 +24,11 @@ import {
 } from '@fortawesome/fontawesome-svg-core'
 import {
   faAngleDoubleRight,
-  faAngleDoubleLeft
+  faAngleDoubleLeft,
+  faCopy,
+  faLink,
+  faEye,
+  faCheckCircle
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -50,6 +54,10 @@ Vue.component('pulse-loader', GridLoader);
 
 library.add(faAngleDoubleRight);
 library.add(faAngleDoubleLeft);
+library.add(faCopy);
+library.add(faLink);
+library.add(faEye);
+library.add(faCheckCircle);
 
 Amplify.configure(aws_exports);
 Vue.use(AmplifyPlugin, VueWindowSize); //VueMoment,AmplifyModules, 

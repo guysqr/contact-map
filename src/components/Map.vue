@@ -37,6 +37,12 @@
         <!-- map based controls go here -->
         <vue-dropzone ref="dropzone" id="dropzone" :options="dropzoneOptions" @vdropzone-success="handleData"></vue-dropzone>
       </l-control>
+      <l-control position="bottomleft">
+        <div>
+          <button class="dropzone" @click="linkToView" style="padding:5px"><font-awesome-icon icon="copy" class="fa-1x"></font-awesome-icon> Copy View <font-awesome-icon icon="eye" class="fa-1x"></font-awesome-icon></button>
+          <font-awesome-icon icon="check-circle" v-if="tickDisplayed" class="fa-2x" style="padding-left: 5px; color: green; margin-bottom: -5px"></font-awesome-icon>
+        </div>
+      </l-control>
       <l-draw-toolbar v-if="notMobile" position="topleft" />
       <l-polyline v-for="p in filteredTrackData" v-bind:key="p.id" :lat-lngs="p.points" :color="p.style.color" ref="userTracks" :weight="p.style.weight" :options="{ pane: 'shadowPane' }">
         <l-tooltip :options="{ permanent: false, interactive: true }">
@@ -84,6 +90,7 @@
   import device from 'vue-device-detector';
   import Analytics from '@aws-amplify/analytics';
   import Auth from '@aws-amplify/auth';
+  const copy = require('copy-text-to-clipboard');
 
   const amplifyConfig = {
     Auth: {
@@ -184,6 +191,7 @@
 
       return {
         notMobile: !Vue.$device.mobile,
+        tickDisplayed: false,
         initComplete: false,
         displaySpinner: true,
         spinnerStackDepth: 0,
@@ -1093,6 +1101,16 @@
             console.log('Fetch Error :-S', err);
           });
       },
+      linkToView() {
+        var me = this;
+        if (copy('https://contactmap.me/#/?date=')) {
+          // alert('copied');
+          this.tickDisplayed = true;
+          setTimeout(function() {
+            me.tickDisplayed = false;
+          }, 3000);
+        }
+      },
       decorateData(data, glid) {
         var decorated = {};
         if (!Object.prototype.hasOwnProperty.call(this.locationsLookup, glid)) {
@@ -1353,6 +1371,7 @@
     min-height: auto;
     background: #4a00f194;
     color: #ffffff;
+    border: none;
   }
   .dropzone:hover {
     background: #4800f1c0;
