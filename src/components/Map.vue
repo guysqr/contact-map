@@ -19,7 +19,7 @@
       <!--      @click="showDataUnderClick"-->
       <l-tile-layer :url="url" :attribution="attribution" />
       <l-control-scale position="topright" :imperial="false" :metric="true" :options="{ pane: 'shadowPane' }"></l-control-scale>
-      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @layeradd="showSpinner" @click="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
+      <l-geo-json v-for="g in geojsons" v-bind:key="g.id" @click="showGeojsonPopup(g)" :geojson="g.geojson" :optionsStyle="g.style" :options="geoOptions"></l-geo-json>
 
       <v-geosearch :options="geosearchOptions" class="leaflet-bar leaflet-control"></v-geosearch>
       <l-control position="bottomright" v-if="notMobile">
@@ -142,6 +142,30 @@
       VGeosearch,
       vueDropzone: vue2Dropzone,
     },
+    props: {
+      geojsons: {
+        type: Array,
+        required: true,
+        default: function() {
+          return [];
+        },
+      },
+    },
+    watch: {
+      geojsons: {
+        // This will let Vue know to look inside the array
+        deep: true,
+
+        // We have to move our method to a handler field
+        handler(event) {
+          console.log('The list of geojsons has changed!');
+          console.log(event);
+          if (!this.glidWithPopup && this.$route.query.glid) {
+            this.openGeojsonPopup(this.$route.query.glid);
+          }
+        },
+      },
+    },
 
     data() {
       var corner1 = latLng(-44.522768, 160.471576);
@@ -156,7 +180,9 @@
       }
 
       var startingMapZoom = 5;
-      if (localStorage.startingMapZoom) {
+      if (this.$route.query.zoom) {
+        startingMapZoom = Number(this.$route.query.zoom);
+      } else if (localStorage.startingMapZoom) {
         startingMapZoom = Number(localStorage.startingMapZoom);
       }
 
@@ -197,8 +223,8 @@
 
       return {
         startingMapZoom: startingMapZoom,
-        startingMapCentre: startingMapCentre,
         defaultMapCentre: maxMapBounds.getCenter(),
+        startingMapCentre: startingMapCentre || maxMapBounds.getCenter(),
         startingColourMetric: startingColourMetric,
         startingGroupType: startingGroupType,
         notMobile: !Vue.$device.mobile,
@@ -228,7 +254,7 @@
           type: 'Point',
           coordinates: [30, 10],
         },
-        geojsons: [],
+        // geojsons: [],
         mapBounds: [corner1, corner2],
         dropzoneOptions: {
           url: 'https://api.contactmap.me/upload',
@@ -463,12 +489,18 @@
         this.geoJsonPopup.remove();
         this.glidWithPopup = null;
       },
+      openGeojsonPopup(glid) {
+        for (let i = 0; i < this.$props.geojsons.length; i++) {
+          if (typeof this.$props.geojsons[i] !== 'undefined' && this.$props.geojsons[i].id === glid) {
+            this.showGeojsonPopup(this.$props.geojsons[i]);
+          }
+        }
+      },
       showGeojsonPopup(geojson) {
         if (this.glidWithPopup === geojson.id) {
           this.hidePopup();
           return;
         }
-        // delay = delay ? delay : 0;
         this.glidWithPopup = geojson.id;
         var content = geojson.content;
         for (var i = 0; i < this.dataDiffsArray.length; i++) {
@@ -477,8 +509,7 @@
           }
         }
         var me = this;
-        // setTimeout(function() {
-        me.geoJsonPopup = L.popup({
+        this.geoJsonPopup = L.popup({
           closeButton: true,
           autoPan: true,
           offset: [0, -20],
@@ -487,7 +518,6 @@
           .setContent(content)
           .openOn(me.$refs.map.mapObject)
           .bringToFront();
-        // }, delay);
       },
       refreshGeojsonPopup() {
         if (this.geoJsonPopup && this.glidWithPopup && Object.prototype.hasOwnProperty.call(this.caseDataLookup, this.glidWithPopup + '-' + this.selectedIsoDate)) {
@@ -546,21 +576,21 @@
       },
       hideOffscreenPolygons() {
         let newArray = [];
-        for (let i = 0; i < this.geojsons.length; i++) {
-          if (typeof this.geojsons[i] === 'undefined' || this.geojsons[i].loaded === false) {
+        for (let i = 0; i < this.$props.geojsons.length; i++) {
+          if (typeof this.$props.geojsons[i] === 'undefined' || this.$props.geojsons[i].loaded === false) {
             continue;
           }
           // console.log(i + " is the current index");
-          if (this.polygonsInView.indexOf(this.geojsons[i].id) > -1) {
-            newArray.push(this.geojsons[i]);
-            // console.log("showing " + this.geojsons[i].id);
+          if (this.polygonsInView.indexOf(this.$props.geojsons[i].id) > -1) {
+            newArray.push(this.$props.geojsons[i]);
+            // console.log("showing " + this.$props.geojsons[i].id);
           } else {
-            this.geoJsonStatusLookup[this.geojsons[i].id].visible = false;
-            // console.log("hiding " + this.geojsons[i].id);
+            this.geoJsonStatusLookup[this.$props.geojsons[i].id].visible = false;
+            // console.log("hiding " + this.$props.geojsons[i].id);
           }
         }
-        this.geojsons.splice(0, this.geojsons.length);
-        this.geojsons.push(...newArray);
+        this.$props.geojsons.splice(0, this.$props.geojsons.length);
+        this.$props.geojsons.push(...newArray);
       },
       showPolygonsInView(replace) {
         if (!this.initComplete) {
@@ -632,7 +662,7 @@
         for (var geo in this.geoJsonStatusLookup) {
           this.geoJsonStatusLookup[geo].visible = false;
         }
-        this.geojsons.splice(0, this.geojsons.length);
+        this.$props.geojsons.splice(0, this.$props.geojsons.length);
         //hide all popups
         this.clearDiffPopups();
       },
@@ -642,23 +672,25 @@
         for (var glid in this.geoJsonStatusLookup) {
           if (!this.geoJsonStatusLookup[glid].visible && this.polygonsInView.indexOf(glid) > -1) {
             //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
-            this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
+            this.$props.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
             this.geoJsonStatusLookup[glid].visible = true;
           }
           if (this.geoJsonStatusLookup[glid].visible) {
             newArray.push(this.geoJsonStatusLookup[glid].geojsonObj);
           }
         }
-        this.geojsons.splice(0, this.geojsons.length);
-        this.geojsons.push(...newArray);
+        this.$props.geojsons.splice(0, this.$props.geojsons.length);
+        this.$props.geojsons.push(...newArray);
       },
       showPolygon(obj, event) {
         if (event) {
           event.originalEvent.stopPropagation();
         }
+        var me = this;
+
         //console.log("Getting polygon " + obj.glid);
         //console.log(obj);
-        var me = this;
+        // var me = this;
         //console.log(me.caseDataLookup);
         let glid = obj.glid;
         if (Object.prototype.hasOwnProperty.call(me.geoJsonStatusLookup, glid)) {
@@ -678,26 +710,26 @@
               this.geoJsonStatusLookup[glid].geojsonObj.content = content;
             }
 
-            this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
+            this.$props.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
             this.geoJsonStatusLookup[glid].visible = true;
           } else {
             if (event) {
               //hide the geojson
               let newArray = [];
-              for (let i = 0; i < this.geojsons.length; i++) {
-                if (typeof this.geojsons[i] === 'undefined' || this.geojsons[i].loaded === false) {
+              for (let i = 0; i < this.$props.geojsons.length; i++) {
+                if (typeof this.$props.geojsons[i] === 'undefined' || this.$props.geojsons[i].loaded === false) {
                   continue;
                 }
-                if (this.geojsons[i].id !== glid) {
-                  //console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
-                  newArray.push(this.geojsons[i]);
+                if (this.$props.geojsons[i].id !== glid) {
+                  //console.log("pushing into newArray "+JSON.stringify(this.$props.geojsons[i]));
+                  newArray.push(this.$props.geojsons[i]);
                 }
               }
               this.geoJsonStatusLookup[glid].visible = false;
               //console.log("setting geojsons to "+JSON.stringify(newArray));
 
-              this.geojsons.splice(0, this.geojsons.length);
-              this.geojsons.push(...newArray);
+              this.$props.geojsons.splice(0, this.$props.geojsons.length);
+              this.$props.geojsons.push(...newArray);
             }
           }
           return;
@@ -767,28 +799,31 @@
       },
       updatePolygons() {
         console.log('running updatePolygons');
+
         // this.showSpinnerTemporarily(3000);
         // let newArray = [];
         //if this has been hidden during a previous update, add it back to test it again
         for (let glid in this.geoJsonStatusLookup) {
           if (!this.geoJsonStatusLookup[glid].loading && !this.geoJsonStatusLookup[glid].visible && Object.prototype.hasOwnProperty.call(this.geoJsonStatusLookup[glid], 'geojsonObj')) {
             //console.log("pushing into geojsons "+JSON.stringify(this.geoJsonStatusLookup[glid].geojsonObj));
-            this.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
+            this.$props.geojsons.push(this.geoJsonStatusLookup[glid].geojsonObj);
             this.geoJsonStatusLookup[glid].visible = true;
           }
         }
-        for (let i = 0; i < this.geojsons.length; i++) {
-          if (typeof this.geojsons[i] === 'undefined' || this.geojsons[i].loaded === false) {
+        for (let i = 0; i < this.$props.geojsons.length; i++) {
+          if (typeof this.$props.geojsons[i] === 'undefined' || this.$props.geojsons[i].loaded === false) {
             continue;
           }
-          let glid = this.geojsons[i].id;
+
+          let glid = this.$props.geojsons[i].id;
+
           // let dataKey = glid + '-' + this.selectedIsoDate;
           // console.log(glid);
           // console.log(dataKey);
           // console.log(Object.prototype.hasOwnProperty.call(this.caseDataLookup, dataKey));
           // console.log(this.polygonsInView.indexOf(glid));
           if (this.polygonsInView.indexOf(glid) > -1 && Object.prototype.hasOwnProperty.call(this.caseDataLookup, glid + '-' + this.selectedIsoDate)) {
-            // console.log('updating polygon ' + this.geojsons[i].content + ': ' + this.caseDataLookup[glid + '-' + this.selectedIsoDate].value);
+            // console.log('updating polygon ' + this.$props.geojsons[i].content + ': ' + this.caseDataLookup[glid + '-' + this.selectedIsoDate].value);
             let colour = this.dataColorLookup[0];
             let value = 0;
             if (Object.prototype.hasOwnProperty.call(this.caseDataLookup[glid + '-' + this.selectedIsoDate], 'value')) {
@@ -796,10 +831,10 @@
               // colour = value >= this.dataColorLookup.length ? this.dataColorLookup[this.dataColorLookup.length - 1] : this.dataColorLookup[value];
               colour = this.dataColorLookup[this.caseDataLookup[glid + '-' + this.selectedIsoDate].colourIndex];
             }
-            // console.log("pushing into newArray "+JSON.stringify(this.geojsons[i]));
+            // console.log("pushing into newArray "+JSON.stringify(this.$props.geojsons[i]));
             let geojsonObj = {
-              geojson: this.geojsons[i].geojson,
-              id: this.geojsons[i].id,
+              geojson: this.$props.geojsons[i].geojson,
+              id: this.$props.geojsons[i].id,
               style: {
                 fillColor: colour,
                 color: 'silver',
@@ -809,15 +844,15 @@
               },
               value: value,
               content: this.caseDataLookup[glid + '-' + this.selectedIsoDate].content,
-              latlng: this.geojsons[i].latlng,
-              bbox: this.geojsons[i].bbox,
+              latlng: this.$props.geojsons[i].latlng,
+              bbox: this.$props.geojsons[i].bbox,
             };
             // newArray.push(geojsonObj);
             this.geoJsonStatusLookup[glid].geojsonObj = geojsonObj;
           } else {
-            // console.log("couldn't update polygon " + this.geojsons[i].content + ': ' + glid + '-' + this.selectedIsoDate);
+            // console.log("couldn't update polygon " + this.$props.geojsons[i].content + ': ' + glid + '-' + this.selectedIsoDate);
             this.geoJsonStatusLookup[glid].visible = false;
-            // newArray.push(this.geojsons[i]);
+            // newArray.push(this.$props.geojsons[i]);
           }
         }
         this.$nextTick(() => {
@@ -1167,8 +1202,8 @@
         decorated.content = '<b>' + this.selectedDate.label + '</b><br>' + decorated.content;
         return decorated;
       },
-      showSpinner() {
-        // console.log('showing spinner: ' + this.spinnerStackDepth);
+      showSpinner(event) {
+        console.log('showing spinner: ' + event);
         this.displaySpinner = true;
         this.spinnerStackDepth++;
       },
@@ -1182,6 +1217,7 @@
         }
       },
       showSpinnerTemporarily(timeout) {
+        // console.log(timeout);
         var timeoutMs = timeout ? timeout : 1000;
         this.showSpinner();
         setTimeout(this.hideSpinner, timeoutMs);
@@ -1192,7 +1228,7 @@
         //do we support geolocation
         if (this.startingMapCentre !== null) {
           setTimeout(function() {
-            me.$refs.map.mapObject.setView(JSON.parse(localStorage.startingMapCentre), Number(localStorage.startingMapZoom), {
+            me.$refs.map.mapObject.setView(me.startingMapCentre, me.startingMapZoom, {
               duration: 0.1,
             });
             me.hideSpinner();
@@ -1240,13 +1276,14 @@
             me.hoverOut(5);
             me.message = 'Default map, loading data...';
           }, 20);
-          
+
           console.log('Geolocation is not available.');
         }
       },
     },
     created() {},
     mounted() {
+      console.log(this.$props.geosons);
       var me = this;
 
       this.setMapHeight();
